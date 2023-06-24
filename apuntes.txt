@@ -1,0 +1,41 @@
+Ambiente virtual
+Activar VENV
+Instalar django
+Instalar psycopg2-binary y psycopg2
+git init (tipicamente se hace dentro de la carpeta raiz, pero hay casos de uso donde se opta por hacerlo afuera y que contenga la carpeta raíz del proyecto)
+django-admin startproject (proyecto)
+Renombrar proyecto (carpeta raíz) a src, para recordar 
+los niveles.
+Crear la app
+py manage.py startapp (nombre de app)
+Crear repositorio remoto github.
+git remote add origin (URL). "origin" es el nombre del repositorio remotamente, pero no necesita llamarse "origin" siempre.
+git add . (agregamos la carpeta en la que esoty posicionado, es decir, dentro de src, al github)
+git push -u origin main
+Las ramas se pueden hacer igualmente por github, no presenta mayor inconveniente.
+automaticamente se setea la rama main localmente.
+puedo chequear las ramas con git branch -a
+agregamos la app en urls.py
+creamos la BD, esta  vez directamente en postgres, para ello primero:
+asigmanos en settings.py la config de la BD.
+Engine sería django.db.backends.postgresql_pysopg2
+Name, nombre del proyecto
+User, usuario registrado en la database
+
+Necesitamos abrir postgres y crear la base de datos de destino, antes de intentar migrar. 
+creamos los usuarios admin
+inicializamos proyecto
+y a trabajar.
+
+--
+
+Crear las redirecciones (recordar, usar principalmente
+el urls de las apps, para poder tener así multiples home)
+Creamos los modelos para reflejaer las exigencias de nuestro proyecto. 
+En templates, \app creamos el bloque html que contendrá por ejemplo las OCs y su estado.
+ahi por ejemplo creamos un div clase "post", y luego
+<h3>{{post.title}}
+     {{post.content}}
+{{post.author.username}}
+Es importante recordar que makemigrations te pone en memoria los modelos, para que puedan ser sucesivamente migrados a la BD con migrate.
+Es importante agregar al admin.py los contenidos que quiero visualizar en la administración y poder manipularlos. Ej: admin.site.register(Post), from .models import Post (donde post es el nombre de uno de los modelos de ejemplo)
