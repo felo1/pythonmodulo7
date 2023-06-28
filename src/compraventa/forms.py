@@ -16,12 +16,20 @@ class pedidos_manuales(forms.ModelForm):
             'productos',
             ]
         
-class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario
-    first_name = forms.CharField(max_length=32)
-    last_name = forms.CharField(max_length=32)
-    email = forms.EmailField(max_length=64) #sólo se eligen algunos campos
+class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario usercreationform
+
+    rut = forms.CharField(max_length=12)
+    nombres = forms.CharField(max_length=30)
+    apellidos = forms.CharField(max_length=30)
+    email = forms.EmailField(max_length=64) 
+    telefono_movil = forms.CharField(max_length=30)
+    telefono_fijo = forms.CharField(max_length=30)
+ 
+    notas = forms.CharField(max_length=250)
+    direcciones = forms.CharField(max_length=250)
+
   
     class Meta(UserCreationForm.Meta):
         model = User
   
-        fields = UserCreationForm.Meta.fields + ('first_name', 'last_name', 'email')
+        fields = UserCreationForm.Meta.fields + ('rut', 'nombres', 'apellidos', 'email', 'telefono_movil', 'telefono_fijo', 'notas', 'direcciones' )

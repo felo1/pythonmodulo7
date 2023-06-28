@@ -30,6 +30,9 @@ class Producto(models.Model):
         return 'sku: ' + self.sku + ' | ' + self.nombre
 
 class Cliente(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True) #uno a uno cliente con usuario 
+    #para que se vea en el admin, se modifica también el admin.py
+
     nombres = models.CharField(max_length=30)
     apellidos = models.CharField(max_length=30)
     rut = models.CharField(max_length=11)
