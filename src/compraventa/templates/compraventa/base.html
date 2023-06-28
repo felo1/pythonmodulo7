@@ -26,9 +26,26 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
+          {%if user.is_active%}
             <li class="nav-item">
+              
                 <a class="nav-link" href="{% url 'pedido_manual' %}">Ingreso de pedidos</a>
             </li>
+              <li class="nav-item">    
+          <a class="nav-item nav-link bg-primary" href="">Usuario: {{user}}</a></li>
+          <li class="nav-item">
+          <a class="nav-item nav-link bg-success" href="{% url 'logout' %}">SALIR</a></li>
+
+          {%else%}
+          <li class="nav-item">  <a class="nav-item nav-link bg-success" href="{% url 'login' %}">Ingrese Aquí</a></li>
+
+          <li class="nav-item">  <a class="nav-item nav-link bg-success" href="{% url 'registro' %}">Registro</a></li>
+
+          {%endif%}
+         
+
+
+
             <li class="nav-item">
               <a class="nav-link" href="{% url 'admin:index' %}">Administración</a>
             </li>
