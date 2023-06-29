@@ -30,15 +30,14 @@ class Producto(models.Model):
         return 'sku: ' + self.sku + ' | ' + self.nombre
 
 class Cliente(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True) #uno a uno cliente con usuario 
+    user = models.OneToOneField(User, on_delete=models.CASCADE) #uno a uno cliente con usuario, importante agregar primary key
     #para que se vea en el admin, se modifica también el admin.py
 
     nombres = models.CharField(max_length=30)
     apellidos = models.CharField(max_length=30)
     rut = models.CharField(max_length=11)
     telefono_movil = models.CharField(max_length=30, default="", blank=True)
-    telefono_fijo = models.CharField(max_length=30, default="", blank=True)
-    email = models.CharField(max_length=30, default="", blank=True)
+    telefono_fijo = models.CharField(max_length=30, default="", blank=True)  
     notas = models.CharField(max_length=250, default="", blank=True)
     direcciones = models.CharField(max_length=250, default="", blank=True)
 

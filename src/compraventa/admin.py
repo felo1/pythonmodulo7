@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Pedido, Producto, Proveedor, Cliente, Sucursal, Categoria
 
 #imports para inline de CLiente
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 
 
@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 #admin.site.register(Pedido) deberían poder modificar los pedidos?
 admin.site.register(Producto)
 admin.site.register(Proveedor)
-admin.site.register(Cliente)
+#admin.site.register(Cliente)
 admin.site.register(Sucursal)
 admin.site.register(Categoria)
 
@@ -28,10 +28,15 @@ class ClienteInline(admin.StackedInline):
 
 
 # Define a new User admin
+class CustomizedUserAdmin(UserAdmin):
+    inlines = (ClienteInline, )
+"""
 class UserAdmin(BaseUserAdmin):
     inlines = [ClienteInline]
 
+"""
 
 # Re-register UserAdmin
+
 admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+admin.site.register(User, CustomizedUserAdmin)

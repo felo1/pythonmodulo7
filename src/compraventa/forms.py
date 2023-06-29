@@ -29,7 +29,7 @@ class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario usercreati
     direcciones = forms.CharField(max_length=250)
 
   
-    class Meta(UserCreationForm.Meta):
+    class Meta:
         model = User
   
         fields = UserCreationForm.Meta.fields + ('rut', 'nombres', 'apellidos', 'email', 'telefono_movil', 'telefono_fijo', 'notas', 'direcciones' )
