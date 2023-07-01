@@ -32,6 +32,7 @@ class Producto(models.Model):
 #modificar la clase cliente para que sea una extensión del usuario base, para aprovechar las funcionalidades
 #que tendrá prontamente de login (para acceder a menu de transacciones históricas, despachos pendientes, etc), etc.
 class Cliente(models.Model):
+    #aire
     usuario = models.OneToOneField(User) #<--
     nombres = models.CharField(max_length=30)
     apellidos = models.CharField(max_length=30)
