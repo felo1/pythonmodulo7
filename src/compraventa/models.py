@@ -29,7 +29,10 @@ class Producto(models.Model):
     def __str__(self):
         return 'sku: ' + self.sku + ' | ' + self.nombre
 
+#modificar la clase cliente para que sea una extensión del usuario base, para aprovechar las funcionalidades
+#que tendrá prontamente de login (para acceder a menu de transacciones históricas, despachos pendientes, etc), etc.
 class Cliente(models.Model):
+    usuario = models.OneToOneField(User) #<--
     nombres = models.CharField(max_length=30)
     apellidos = models.CharField(max_length=30)
     rut = models.CharField(max_length=11)
@@ -51,12 +54,13 @@ class Pedido(models.Model):
     suma_descuentos = models.FloatField(default=0) # sumatoria de los descuentos individuales
     total_pedido = models.FloatField(default=0) # monto a pagar, descuentos e intereses
     fecha_pedido = models.DateTimeField(default='2023-1-1')
-    despacho = models.BooleanField
+    tiene_despacho = models.BooleanField
+    estado_despacho = models.CharField(max_length=30, default="En proceso", blank=True)
     direccion = models.CharField(max_length=250, default="")
 
     def __str__(self):
         return str(self.numero_transaccion)
-
+    
 class Sucursal(models.Model):
     nombre = models.CharField(max_length=30)
     direccion = models.CharField(max_length=250, default="")
