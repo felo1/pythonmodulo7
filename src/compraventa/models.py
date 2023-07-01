@@ -55,7 +55,18 @@ class Pedido(models.Model):
     total_pedido = models.FloatField(default=0) # monto a pagar, descuentos e intereses
     fecha_pedido = models.DateTimeField(default='2023-1-1')
     tiene_despacho = models.BooleanField
-    estado_despacho = models.CharField(max_length=30, default="En proceso", blank=True)
+    #TODO: estado despacho debe ser un selector
+
+    ESTADO_CHOICES = [
+        ('Recibido', 'Recibido'),
+        ('Pago aceptado', 'Pago aceptado'),
+        ('Orden de compra generada', 'Orden de compra generada'),
+        ('En proceso', 'En proceso'),
+        ('Enviado', 'Enviado'),
+        ('En transito', 'En transito'),
+        ('Despachado', 'Despachado'),
+    ]
+    estado_despacho = models.CharField(max_length=30, choices=ESTADO_CHOICES, default="Recibido", blank=False)
     direccion = models.CharField(max_length=250, default="")
 
     def __str__(self):
