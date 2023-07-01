@@ -49,8 +49,6 @@ def pedido_manual(request):
     }
     return render(request, 'compraventa/pedidos.html', context=context)
 
-
-
 def registrar_usuario(request):
     if request.method == 'POST':
         form = RegistrarUsuarioForm(request.POST)
