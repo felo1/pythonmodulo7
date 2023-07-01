@@ -21,7 +21,7 @@ class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario usercreati
     rut = forms.CharField(max_length=12)
     nombres = forms.CharField(max_length=30)
     apellidos = forms.CharField(max_length=30)
-    email = forms.EmailField(max_length=64) 
+   
     telefono_movil = forms.CharField(max_length=30)
     telefono_fijo = forms.CharField(max_length=30)
  
