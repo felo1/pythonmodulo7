@@ -59,6 +59,17 @@ def registrar_usuario(request):
             user = form.save() #guardar formulario
             grupo = Group.objects.get(name='usuario_cliente') #buscar el grupo
             user.groups.add(grupo)  #asignarlo al usuario
+            cliente = Cliente(
+                user=user,
+                nombres=form.cleaned_data['nombres'],
+                apellidos=form.cleaned_data['apellidos'],
+                rut=form.cleaned_data['rut'],
+                telefono_movil=form.cleaned_data['telefono_movil'],
+                telefono_fijo=form.cleaned_data['telefono_fijo'],
+                notas= form.cleaned_data['notas'],
+                direcciones=form.cleaned_data['direcciones']
+            )
+            cliente.save()
             messages.success(request, 'Usuario ingresado exitosamente')
             return redirect('login')
     else:
