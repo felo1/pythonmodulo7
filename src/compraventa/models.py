@@ -32,14 +32,14 @@ class Producto(models.Model):
 #modificar la clase cliente para que sea una extensión del usuario base, para aprovechar las funcionalidades
 #que tendrá prontamente de login (para acceder a menu de transacciones históricas, despachos pendientes, etc), etc.
 class Cliente(models.Model):
-    #aire
-    usuario = models.OneToOneField(User) #<--
+    user = models.OneToOneField(User, on_delete=models.CASCADE) #uno a uno cliente con usuario, importante agregar primary key
+    #para que se vea en el admin, se modifica también el admin.py
+
     nombres = models.CharField(max_length=30)
     apellidos = models.CharField(max_length=30)
     rut = models.CharField(max_length=11)
     telefono_movil = models.CharField(max_length=30, default="", blank=True)
-    telefono_fijo = models.CharField(max_length=30, default="", blank=True)
-    email = models.CharField(max_length=30, default="", blank=True)
+    telefono_fijo = models.CharField(max_length=30, default="", blank=True)  
     notas = models.CharField(max_length=250, default="", blank=True)
     direcciones = models.CharField(max_length=250, default="", blank=True)
 
