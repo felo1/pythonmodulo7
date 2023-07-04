@@ -5,11 +5,13 @@ AE 1
 ✔ Crear un proyecto en Django, con las aplicaciones que estimes necesarias para abordar el
 problema anterior.
 
-    Nuestra app se llama 'compraventa' (http://127.0.0.1:8000/) y se encuentra dentro del proyecto 'proyecto'
+    Nuestra app se llama 'compraventa' (http://127.0.0.1:8000/) y 
+    se encuentra dentro del proyecto 'proyecto'
 
 ✔ Conectar el proyecto a una base de datos en PostgreSQL
 
-    Según lo conversado con awakers, por el momento se trabajará en SQLite para poder trabajar en máquinas distintas
+    Según lo conversado con awakers, por el momento se trabajará en 
+    SQLite para poder trabajar en máquinas distintas
 
 
 ✔ Realizar la migración inicial, corroborando que ésta se ve reflejada en la base de datos
@@ -17,7 +19,8 @@ PostgreSQL.
 
     Se realiza migraciones en SQLite3:
 
-    https://github.com/rodrigolfh/pythonmodulo7/blob/main/img_readme/base.png
+    ![Image](https://raw.githubusercontent.com/rodrigolfh/pythonmodulo7/main/img_readme/base.png)
+
 
 
 
