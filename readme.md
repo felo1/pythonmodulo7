@@ -26,7 +26,12 @@ PostgreSQL.
 ✔ Definir usuarios de tipo superuser y usuarios del sistema, considerando que todos podrán
 interactuar con sus propias tareas.
 
+    admin:admin
+    rodrigo:contraseña
+
 ![Image](https://raw.githubusercontent.com/rodrigolfh/pythonmodulo7/main/img_readme/usuarios.png)
+
+
 
 ✔ La página principal será una página con datos e información básica de “Te lo vendo”.
 
