@@ -54,6 +54,7 @@ def pedido_manual(request):
 def registrar_usuario(request):
     if request.method == 'POST':
         form = RegistrarUsuarioForm(request.POST)
+        print(form)
         
         
         if form.is_valid():
