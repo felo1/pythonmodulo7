@@ -17,7 +17,7 @@ PostgreSQL.
 
     Se realiza migraciones en SQLite3:
 
-    ![alt text](https://github.com/rodrigolfh/pythonmodulo7/blob/main/img_readme/base.png?raw=true)
+    https://github.com/rodrigolfh/pythonmodulo7/blob/main/img_readme/base.png
 
 
 
