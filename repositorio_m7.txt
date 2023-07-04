@@ -1,0 +1,3 @@
+Repositorio: https://github.com/felo1/pythonmodulo7
+
+Readme: https://github.com/felo1/pythonmodulo7#readme
