@@ -29,10 +29,11 @@ class Producto(models.Model):
     def __str__(self):
         return 'sku: ' + self.sku + ' | ' + self.nombre
 
+#modificar la clase cliente para que sea una extensión del usuario base, para aprovechar las funcionalidades
+#que tendrá prontamente de login (para acceder a menu de transacciones históricas, despachos pendientes, etc), etc.
 class Cliente(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE) #uno a uno cliente con usuario, importante agregar primary key
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True) #uno a uno cliente con usuario, importante agregar primary key
     #para que se vea en el admin, se modifica también el admin.py
-
     nombres = models.CharField(max_length=30)
     apellidos = models.CharField(max_length=30)
     rut = models.CharField(max_length=11)
@@ -53,12 +54,24 @@ class Pedido(models.Model):
     suma_descuentos = models.FloatField(default=0) # sumatoria de los descuentos individuales
     total_pedido = models.FloatField(default=0) # monto a pagar, descuentos e intereses
     fecha_pedido = models.DateTimeField(default='2023-1-1')
-    despacho = models.BooleanField
+    tiene_despacho = models.BooleanField
+    #TODO: estado despacho debe ser un selector
+
+    ESTADO_CHOICES = [
+        ('Recibido', 'Recibido'),
+        ('Pago aceptado', 'Pago aceptado'),
+        ('Orden de compra generada', 'Orden de compra generada'),
+        ('En proceso', 'En proceso'),
+        ('Enviado', 'Enviado'),
+        ('En transito', 'En transito'),
+        ('Despachado', 'Despachado'),
+    ]
+    estado_despacho = models.CharField(max_length=30, choices=ESTADO_CHOICES, default="Recibido", blank=False)
     direccion = models.CharField(max_length=250, default="")
 
     def __str__(self):
         return str(self.numero_transaccion)
-
+    
 class Sucursal(models.Model):
     nombre = models.CharField(max_length=30)
     direccion = models.CharField(max_length=250, default="")
