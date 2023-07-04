@@ -26,29 +26,28 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
-          {%if user.is_active%}
+          {% if user.is_staff %}
             <li class="nav-item">
-              
-                <a class="nav-link" href="{% url 'pedido_manual' %}">Ingreso de pedidos</a>
+              <a class="nav-link" href="{% url 'pedido_manual' %}">Ingreso de pedidos</a>
             </li>
               <li class="nav-item">    
-          <a class="nav-item nav-link bg-primary" href="">Usuario: {{user}}</a></li>
+          <a class="nav-item nav-link" href="">Usuario: {{user}}</a></li>
           <li class="nav-item">
-          <a class="nav-item nav-link bg-success" href="{% url 'logout' %}">SALIR</a></li>
-
-          {%else%}
-          <li class="nav-item">  <a class="nav-item nav-link bg-success" href="{% url 'login' %}">Ingrese Aquí</a></li>
-
-          <li class="nav-item">  <a class="nav-item nav-link bg-success" href="{% url 'registro' %}">Registro</a></li>
-
+          <a class="nav-item nav-link" href="{% url 'logout' %}">SALIR</a></li>
+          {% elif user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'pedido_manual_cliente' %}">Solicitud de pedidos</a>
+          </li>
+            <li class="nav-item">    
+          <a class="nav-item nav-link" href="">Usuario: {{user}}</a></li>
+          <li class="nav-item">
+          <a class="nav-item nav-link" href="{% url 'logout' %}">SALIR</a></li>
           {%endif%}
-         
-
-
-
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'admin:index' %}">Administración</a>
-            </li>
+          {% if not user.is_authenticated %}
+          <li class="nav-item">  <a class="nav-item nav-link" href="{% url 'login' %}">Ingreso</a></li>
+          <li class="nav-item">  <a class="nav-item nav-link" href="{% url 'registro' %}">Registro</a></li>  
+          {%endif%}
+          <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}">Administración</a></li>
         </ul>
     </div>
 </nav>
