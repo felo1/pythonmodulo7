@@ -16,6 +16,13 @@ class pedidos_manuales(forms.ModelForm):
             'productos',
             ]
         
+class pedidos_manuales_cliente(forms.ModelForm):
+    class Meta:
+        model = Pedido
+        fields = [
+            'productos',
+            ]        
+        
 class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario usercreationform
 
     rut = forms.CharField(max_length=12)
