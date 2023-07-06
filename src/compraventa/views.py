@@ -11,7 +11,7 @@ from .forms import pedidos_manuales, pedidos_manuales_cliente
 import datetime
 from django.contrib.auth.models import Group, User
 # Create your views here.
-
+#
 def index(request):
     return render(request, 'compraventa/index.html')
 
