@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.shortcuts import render, redirect
 #from .forms import pedidos_manuales, pedidos_manuales_cliente
 import datetime
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group, User
 # Create your views here.
 #
@@ -77,9 +78,10 @@ def logout_view(request):
 
 
 
-class ProductoListView(ListView):
+class ProductoListView(ListView,LoginRequiredMixin):
     model = Producto
     paginate_by = 10  # if pagination is desired
+    
 
     def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
@@ -93,13 +95,18 @@ class ProductoListView(ListView):
         id_producto = request.POST.get('id_producto') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
         #producto = Producto.objects.get(id_producto=id_producto) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
         #item_pedido = ItemPedido.objects.get(id=id_producto)
-
         
 
-
+        user_id = request.user.id
+        print("********************user_id ", user_id)
+        cliente_id = Cliente.objects.get(user_id=user_id)
+       
+       
         if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
             #cliente_actual = self.user.cliente
-            pedido = Pedido.objects.create() #algo asi, ccreo que falta asignar en este punto el cliente
+            #pedido = Pedido.objects.create() #algo asi, ccreo que falta asignar en este punto el cliente
+            pedido = Pedido.objects.create(cliente_solicitante=cliente_id)
+            pedido.save()
             cantidad = request.POST['cantidad'] #actualiza el campo con el valor correspondiente
             producto = request.POST['id_producto']
             item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido_id=pedido.id_pedido, producto_id=producto)

@@ -13,7 +13,7 @@ class Categoria(models.Model):
     
 #considerar categoria padre e hija, como implementar esto?
 class Producto(models.Model):
-    id_producto = models.IntegerField(primary_key=True, default=1)
+    id_producto = models.IntegerField(primary_key=True)
     nombre = models.CharField(max_length=30)
     descripcion = models.CharField(max_length=256, null=True)
     precio = models.IntegerField(default=1)    
