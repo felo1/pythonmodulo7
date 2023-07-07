@@ -86,35 +86,38 @@ class ProductoListView(ListView,LoginRequiredMixin):
     def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
         pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
-        itempedido_form = ItemPedidoForm()
-        context['pedido_form'] = pedido_form #se agrega el Pedido_form al dict de contexto 
+        itempedido_form = ItemPedidoForm() #formulario vacío
+        context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
         return context #contexto final   
     
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView)
-        id_producto = request.POST.get('id_producto') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
+        #id_producto = request.POST.get('id_producto') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
         #producto = Producto.objects.get(id_producto=id_producto) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
         #item_pedido = ItemPedido.objects.get(id=id_producto)
         
 
-        user_id = request.user.id
-        print("********************user_id ", user_id)
-        cliente_id = Cliente.objects.get(user_id=user_id)
+        user_id = request.user.id #id de usuario logueado
        
+        cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
+        #relación 1 a 1 con un usuario.
+       
+        pedido = Pedido.objects.create(cliente_solicitante=cliente_id) #TODO: encontrar la forma de que se mantenga el nro de pedido
+        #y no se genere un nuevo pedido cada vez que se genera un item_pedido
        
         if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
             #cliente_actual = self.user.cliente
             #pedido = Pedido.objects.create() #algo asi, ccreo que falta asignar en este punto el cliente
-            pedido = Pedido.objects.create(cliente_solicitante=cliente_id)
-            pedido.save()
+            pedido.save()#guarda
             cantidad = request.POST['cantidad'] #actualiza el campo con el valor correspondiente
-            producto = request.POST['id_producto']
-            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido_id=pedido.id_pedido, producto_id=producto)
+            id_producto = request.POST['id_producto']
+            producto = Producto.objects.get(id_producto=id_producto) #obtiene INSTANCIA del producto en cuestión
+            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #instancia item_pedido
    
             item_pedido.save()    
     
         item_pedido.save() #guarda
-        return redirect('producto_list') #redirige al listview, reflejándose el cambio de inmediato.
+        return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
  
 
 

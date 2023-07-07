@@ -23,7 +23,7 @@
             <td><form method="post">
                 {% csrf_token %}
                 <input type="number" id="cantidad-{{ producto.id }}" name="cantidad">
-                <input type="hidden" name="id_producto" value="{{ producto.id }}">
+                <input type="hidden" name="id_producto" value="{{ producto.id_producto }}">
                 <button type="submit">Agregar</button>
             </form>
             
