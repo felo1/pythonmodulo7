@@ -1,7 +1,14 @@
-from .models import Producto, Pedido, Categoria, Cliente
+from .models import Producto, Pedido, Categoria, Cliente, ItemPedido
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.forms import modelform_factory
+
+PedidoForm = modelform_factory(Pedido, fields=['cliente_solicitante', 'estado_despacho', 'direccion_despacho']) #tiene_despacho tira error
+
+ItemPedidoForm = modelform_factory(ItemPedido, fields=['producto', 'cantidad'])
+
+
 
 class ingreso_clientes(forms.ModelForm):
    class Meta:
@@ -21,6 +28,11 @@ class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario usercreati
     class Meta:
         model = User
         fields = UserCreationForm.Meta.fields + ('rut', 'nombres', 'apellidos', 'email', 'telefono_movil', 'telefono_fijo', 'notas')
+
+
+
+
+
 
 
 """

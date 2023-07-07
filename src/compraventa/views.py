@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import Categoria, Cliente, Pedido, Producto
-from .forms import RegistrarUsuarioForm
+from .models import Categoria, Cliente, Pedido, Producto, ItemPedido
+from .forms import RegistrarUsuarioForm, PedidoForm, ItemPedidoForm
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required
@@ -71,6 +71,50 @@ def logout_view(request):
     
     logout(request)
     return render(request, "compraventa/logout.html")
+
+
+from django.utils import timezone
+from django.views.generic.list import ListView
+
+from .models import Producto
+
+
+class ProductoListView(ListView):
+    model = Producto
+    paginate_by = 10  # if pagination is desired
+
+    def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
+        context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
+        pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
+        itempedido_form = ItemPedidoForm()
+        context['pedido_form'] = pedido_form #se agrega el Pedido_form al dict de contexto 
+        context['itempedido_form'] = itempedido_form #y el otro form
+        return context #contexto final   
+    
+    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView)
+        id_producto = request.POST.get('id_producto') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
+        producto = Producto.objects.get(id=id_producto) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
+        item_pedido = ItemPedido.objects.get(id=id_producto)
+
+        #acá hay que ver cómo instanciar un pedido antes de generar un pedido_item, idealmente al momento de abrir el view
+
+
+        if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
+            item_pedido.estado = request.POST['cantidad'] #actualiza el campo con el valor correspondiente
+   
+            item_pedido.save()    
+    
+        item_pedido.save() #guarda
+        return redirect('producto_list') #redirige al listview, reflejándose el cambio de inmediato.
+ 
+
+
+
+
+
+
+
+
 
 """
 

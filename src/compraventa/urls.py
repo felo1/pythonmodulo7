@@ -24,6 +24,7 @@ urlpatterns = [
     path("login", views.login_view, name='login'),
     path("hola", views.hola, name="hola"),
     path("logout", views.logout_view, name="logout"),
+    path("productos", views.ProductoListView.as_view(), name="productos")
 ]
 
    # path("pedido_manual", views.pedido_manual, name = "pedido_manual"),

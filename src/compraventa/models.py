@@ -15,6 +15,7 @@ class Categoria(models.Model):
 class Producto(models.Model):
     id_producto = models.IntegerField(primary_key=True, default=1)
     nombre = models.CharField(max_length=30)
+    descripcion = models.CharField(max_length=256, null=True)
     precio = models.IntegerField(default=1)    
     stock = models.IntegerField(default=0)
     modelo = models.CharField(max_length=250, default=None) 

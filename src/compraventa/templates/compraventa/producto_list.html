@@ -1,0 +1,39 @@
+{% extends "compraventa/base.html" %}
+
+{% block body %}
+<div class= "mt-1 ml-1">
+    <h1>Productos</h1>
+    <table class="table table-striped-columns">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Modelo</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Agregar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for producto in object_list %}
+          <tr>
+            <td>{{ producto.nombre }}</td>
+            <td>{{ producto.modelo }}</td>
+            <td>{{ producto.descripcion }}</td>
+            <td>${{ producto.precio }}</td>
+            <td><form>
+                <input type="number" id="cantidad-{{producto.id_producto}}" name="cantidad" >
+                <button type="button">Agregar</button> 
+            </form>
+                </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+    
+ 
+
+
+</div>
+
+{% endblock %}
