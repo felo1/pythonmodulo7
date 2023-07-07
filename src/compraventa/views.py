@@ -1,3 +1,6 @@
+
+from django.utils import timezone
+from django.views.generic.list import ListView
 from django.shortcuts import render
 from .models import Categoria, Cliente, Pedido, Producto, ItemPedido
 from .forms import RegistrarUsuarioForm, PedidoForm, ItemPedidoForm
@@ -73,11 +76,6 @@ def logout_view(request):
     return render(request, "compraventa/logout.html")
 
 
-from django.utils import timezone
-from django.views.generic.list import ListView
-
-from .models import Producto
-
 
 class ProductoListView(ListView):
     model = Producto
@@ -93,14 +91,18 @@ class ProductoListView(ListView):
     
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView)
         id_producto = request.POST.get('id_producto') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
-        producto = Producto.objects.get(id=id_producto) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
-        item_pedido = ItemPedido.objects.get(id=id_producto)
+        #producto = Producto.objects.get(id_producto=id_producto) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
+        #item_pedido = ItemPedido.objects.get(id=id_producto)
 
-        #acá hay que ver cómo instanciar un pedido antes de generar un pedido_item, idealmente al momento de abrir el view
+        
 
 
         if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
-            item_pedido.estado = request.POST['cantidad'] #actualiza el campo con el valor correspondiente
+            #cliente_actual = self.user.cliente
+            pedido = Pedido.objects.create() #algo asi, ccreo que falta asignar en este punto el cliente
+            cantidad = request.POST['cantidad'] #actualiza el campo con el valor correspondiente
+            producto = request.POST['id_producto']
+            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido_id=pedido.id_pedido, producto_id=producto)
    
             item_pedido.save()    
     

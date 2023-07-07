@@ -20,10 +20,13 @@
             <td>{{ producto.modelo }}</td>
             <td>{{ producto.descripcion }}</td>
             <td>${{ producto.precio }}</td>
-            <td><form>
-                <input type="number" id="cantidad-{{producto.id_producto}}" name="cantidad" >
-                <button type="button">Agregar</button> 
+            <td><form method="post">
+                {% csrf_token %}
+                <input type="number" id="cantidad-{{ producto.id }}" name="cantidad">
+                <input type="hidden" name="id_producto" value="{{ producto.id }}">
+                <button type="submit">Agregar</button>
             </form>
+            
                 </td>
           </tr>
           {% endfor %}

@@ -50,9 +50,9 @@ class Direccion(models.Model):
 
 class Pedido(models.Model):
     id_pedido = models.IntegerField(primary_key=True, default=1)
-    cliente_solicitante = models.ForeignKey(Cliente, on_delete=models.DO_NOTHING, default=None)
-    fecha_pedido = models.DateTimeField(auto_now=True)
-    tiene_despacho = models.BooleanField
+    cliente_solicitante = models.ForeignKey(Cliente, on_delete=models.DO_NOTHING, default=None, null=True)
+    fecha_pedido = models.DateTimeField(auto_now=True, null=True)
+    tiene_despacho = models.BooleanField(null=True)
     ESTADO_CHOICES = [
         ('Recibido', 'Recibido'),
         ('Pago aceptado', 'Pago aceptado'),
@@ -62,8 +62,8 @@ class Pedido(models.Model):
         ('En transito', 'En transito'),
         ('Entregado', 'Entregado'),
     ]
-    estado_despacho = models.CharField(max_length=30, choices=ESTADO_CHOICES, default="Recibido", blank=False)
-    direccion_despacho = models.ForeignKey(Direccion, on_delete=models.DO_NOTHING)
+    estado_despacho = models.CharField(max_length=30, choices=ESTADO_CHOICES, default="Recibido", null=True)
+    direccion_despacho = models.ForeignKey(Direccion, on_delete=models.DO_NOTHING, null=True)
     impuesto = models.IntegerField(default=19)
 
     def subtotal(self):
