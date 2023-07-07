@@ -8,6 +8,24 @@ class ingreso_clientes(forms.ModelForm):
         model = Cliente
         fields = '__all__' 
 
+        
+class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario usercreationform
+
+    rut = forms.CharField(max_length=12)
+    nombres = forms.CharField(max_length=30)
+    apellidos = forms.CharField(max_length=30)
+    telefono_movil = forms.CharField(max_length=30)
+    telefono_fijo = forms.CharField(max_length=30)
+    notas = forms.CharField(max_length=250)
+  
+    class Meta:
+        model = User
+        fields = UserCreationForm.Meta.fields + ('rut', 'nombres', 'apellidos', 'email', 'telefono_movil', 'telefono_fijo', 'notas')
+
+
+"""
+
+
 class pedidos_manuales(forms.ModelForm):
     class Meta:
         model = Pedido
@@ -22,16 +40,5 @@ class pedidos_manuales_cliente(forms.ModelForm):
         fields = [
             'productos',
             ]        
-        
-class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario usercreationform
 
-    rut = forms.CharField(max_length=12)
-    nombres = forms.CharField(max_length=30)
-    apellidos = forms.CharField(max_length=30)
-    telefono_movil = forms.CharField(max_length=30)
-    telefono_fijo = forms.CharField(max_length=30)
-    notas = forms.CharField(max_length=250)
-  
-    class Meta:
-        model = User
-        fields = UserCreationForm.Meta.fields + ('rut', 'nombres', 'apellidos', 'email', 'telefono_movil', 'telefono_fijo', 'notas')
+"""

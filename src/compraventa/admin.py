@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Pedido, Producto, Cliente, Sucursal, Categoria, Direccion
+from .models import Pedido, Producto, Cliente, Sucursal, Categoria, Direccion, ItemPedido
 
 #imports para inline de CLiente
 from django.contrib.auth.admin import UserAdmin
@@ -14,6 +14,7 @@ admin.site.register(Pedido)
 admin.site.register(Sucursal)
 admin.site.register(Categoria)
 admin.site.register(Direccion)
+admin.site.register(ItemPedido)
 
 
 #entonces, se crea un modelo 'inline', que permite que se puedan editar campos en el admin

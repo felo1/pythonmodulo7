@@ -1,6 +1,10 @@
+from django.db.models import Sum
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+
+impuesto = 19
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=30)
@@ -9,19 +13,19 @@ class Categoria(models.Model):
     
 #considerar categoria padre e hija, como implementar esto?
 class Producto(models.Model):
+    id_producto = models.IntegerField(primary_key=True, default=1)
     nombre = models.CharField(max_length=30)
-    precio = models.IntegerField(default=1)
-    sku = models.AutoField(primary_key=True)
+    precio = models.IntegerField(default=1)    
     stock = models.IntegerField(default=0)
     modelo = models.CharField(max_length=250, default=None) 
     #deberá ser llenado de forma que se pueda parsear para presentar el contenido. 
     #cual sería la mejor manera de lidiar con esto?
     categoria = models.ForeignKey(Categoria, on_delete=models.DO_NOTHING, default=None)
-    impuesto = models.FloatField(default=19, verbose_name="IVA")
+    #impuesto = models.FloatField(default=19, verbose_name="IVA")
     descuento = models.FloatField(default=0) # descuento base + descuentos circunstanciales
 
     def __str__(self):
-        return 'sku: ' + str(self.sku) + ' | ' + self.nombre
+        return 'sku: ' + str(self.id_producto) + ' | ' + self.nombre
 
 class Cliente(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True) 
@@ -42,21 +46,11 @@ class Direccion(models.Model):
     def __str__(self) -> str:
         return self.direccion
     
+
 class Pedido(models.Model):
-    #ver como restringiur modificar algunas cosas que en un producto de la vida real no deberian ser
-    #modificables en la administracion una vez generado un pedido.
+    id_pedido = models.IntegerField(primary_key=True, default=1)
     cliente_solicitante = models.ForeignKey(Cliente, on_delete=models.DO_NOTHING, default=None)
-    productos = models.ManyToManyField(Producto, default=None)
-    #ver alguna forma de almacenar numeros de boleta de fantasia que no intervengan con 
-    #el ingreso de los productos en los pedidos
-    #posiblemente con shortUID como mencionó anibal (para generar IDs publoicos aleatorios)
-    #si funcionan como index SIN ser el ID, que es algo de uso interno
-    numero_transaccion = models.AutoField(primary_key=True) # n° de orden de compra
-    #para trazabilidad de la info.
-    subtotal = models.FloatField(default=0, verbose_name="Subtotal")
-    suma_descuentos = models.FloatField(default=0, verbose_name="Descuentos") # sumatoria de los descuentos individuales
-    total_pedido = models.FloatField(default=0, verbose_name="Total a pagar") # monto a pagar, descuentos e intereses
-    fecha_pedido = models.DateTimeField()
+    fecha_pedido = models.DateTimeField(auto_now=True)
     tiene_despacho = models.BooleanField
     ESTADO_CHOICES = [
         ('Recibido', 'Recibido'),
@@ -69,10 +63,29 @@ class Pedido(models.Model):
     ]
     estado_despacho = models.CharField(max_length=30, choices=ESTADO_CHOICES, default="Recibido", blank=False)
     direccion_despacho = models.ForeignKey(Direccion, on_delete=models.DO_NOTHING)
+    impuesto = models.IntegerField(default=19)
 
-    def __str__(self):
-        return 'Orden de compra N°: ' + str(self.numero_transaccion) + ' | Nombre de cliente: '+ self.cliente_solicitante.nombres + ' ' + self.cliente_solicitante.apellidos + " | Estado de despacho: " + self.estado_despacho
+    def subtotal(self):
+        return self.itempedido_set.aggregate(total=Sum('precio'))['total'] or 0
+
+    def total_pedido(self):
+        subtotal = self.subtotal()
+        total_con_impuesto = subtotal + (subtotal * self.impuesto / 100)
+        return round(total_con_impuesto)
     
+    def __str__(self):
+        return 'Orden de compra N°: ' + str(self.id_pedido) + ' | Nombre de cliente: '+ self.cliente_solicitante.nombres + ' ' + self.cliente_solicitante.apellidos + " | Estado de despacho: " + self.estado_despacho
+
+class ItemPedido(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.DO_NOTHING, related_name='itempedido_set')
+    producto = models.ForeignKey(Producto, on_delete=models.DO_NOTHING)
+    cantidad = models.IntegerField(default=1)
+
+    # Other fields and methods for the ItemPedido model
+
+
+
+
 class Sucursal(models.Model):
     nombre = models.CharField(max_length=30)
     direccion = models.CharField(max_length=250, default="")
