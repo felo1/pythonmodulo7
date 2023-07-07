@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Categoria, Cliente, Pedido, Producto, Proveedor
+from .models import Categoria, Cliente, Pedido, Producto
 from .forms import RegistrarUsuarioForm
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -11,29 +11,32 @@ from .forms import pedidos_manuales, pedidos_manuales_cliente
 import datetime
 from django.contrib.auth.models import Group, User
 # Create your views here.
-
+#
 def index(request):
     return render(request, 'compraventa/index.html')
 
 def pedido_manual_cliente(request):
     form = pedidos_manuales_cliente()
     if request.method == "POST":
-        print(request)
         form = pedidos_manuales_cliente(request.POST)
         if form.is_valid():
-            print(form)
             pedido = Pedido()
             try:
                 cliente = Cliente.objects.get(user=request.user)
                 pedido.cliente_solicitante = cliente
             except Cliente.DoesNotExist:
                 raise ValueError("No se encuentra el cliente de origen")
-            pedido.productos = form.cleaned_data['productos']
-            if Pedido.objects.exists():
-                ultimo_pedido = Pedido.objects.latest('numero_transaccion')
-                pedido.numero_transaccion = ultimo_pedido.numero_transaccion + 1
-            else:
-                pedido.numero_transaccion = 1
+
+            productos = form.cleaned_data['productos']
+            selected_productos = list(productos) 
+            pedido.productos.set(selected_productos)
+
+            #for producto in productos:
+            #    print(producto)
+            #    pedido.productos.set(producto)
+            #pedido.productos = form.cleaned_data['productos']
+            #aparentemnete tendremos que hacer producto.set()
+            pedido.tiene_despacho = form.cleaned_data['tiene_despacho']
             pedido.subtotal = pedido.productos.precio
             pedido.fecha_pedido = datetime.datetime.now()
             pedido.save()
@@ -45,7 +48,6 @@ def pedido_manual_cliente(request):
         'form': form
     }
     return render(request, 'compraventa/pedidos externos.html', context=context)
-
 
 def pedido_manual(request):
     form = pedidos_manuales()
@@ -97,7 +99,7 @@ def registrar_usuario(request):
                 telefono_movil=form.cleaned_data['telefono_movil'],
                 telefono_fijo=form.cleaned_data['telefono_fijo'],
                 notas= form.cleaned_data['notas'],
-                direcciones=form.cleaned_data['direcciones']
+                #direcciones=form.cleaned_data['direcciones']
             )
             cliente.save()
             messages.success(request, 'Usuario ingresado exitosamente')
@@ -112,7 +114,6 @@ def login_view(request): #el form está directo en el template login.html
         #si en la url está la palabra "next", generada al redirigir desde @login_required, enviar mensaje.
         messages.add_message(request, messages.INFO, 'Debe ingresar para acceder a las funcionalidades.')
 
-
     if request.method == "POST":
         username = request.POST["usuario"]
         password = request.POST["password"]
@@ -122,7 +123,6 @@ def login_view(request): #el form está directo en el template login.html
         if user:
             
             login(request, user)
-          
             return HttpResponseRedirect(reverse("hola"))
         else:
             context= ["Credenciales Inválidas"]#si no lo hago como lista, itera por cada caracter del string.
