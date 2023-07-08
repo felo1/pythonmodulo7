@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.sessions.models import Session #manejo de sesiones
+#from django.contrib.sessions.models import Session #manejo de sesiones
 #from .forms import pedidos_manuales, pedidos_manuales_cliente
 import datetime
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -79,52 +79,46 @@ def logout_view(request):
 
 
 
-class ProductoListView(ListView,LoginRequiredMixin):
+class ProductoListView(ListView):
     model = Producto
     paginate_by = 10
  
-    
-
     def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
         pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
         itempedido_form = ItemPedidoForm() #formulario vacío
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
-        return context #contexto final   
+        return context #lista de contextos final   
     
-    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView)
-        #id_producto = request.POST.get('id_producto') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
-        #producto = Producto.objects.get(id_producto=id_producto) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
-        #item_pedido = ItemPedido.objects.get(id=id_producto)
+    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
+        #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
+        
 
-        if not request.session.session_key: #asegurarse de que exista sesión
+        if not request.session.session_key: #asegurarse de que exista sesión y que tenga asignada un session_key (en SOF decía que podía darse el caso)
             request.session.save()
-        session_id = request.session.session_key #obtiene session_id, para asignarlo luego a pk de Pedido
-
-        print("session:key: **************", session_id)
-     
-         #número de sesión
+        session_id = request.session.session_key #obtiene session_key, para asignarlo luego a pk de Pedido
+      
         user_id = request.user.id #id de usuario logueado
        
         cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
         #relación 1 a 1 con un usuario.
-        pedido = Pedido.objects.filter(id_pedido=session_id).exists()
-        if not pedido:
-            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=cliente_id)
-        pedido = Pedido.objects.get(cliente_solicitante=cliente_id, id_pedido=session_id) #TODO: encontrar la forma de que se mantenga el nro de pedido
-        #y no se genere un nuevo pedido cada vez que se genera un item_pedido
-    
+
+        pedido = Pedido.objects.filter(id_pedido=session_id).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
+        # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
+
+        if not pedido: #si no hay un pedido
+            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=cliente_id) #crea uno
+        pedido = Pedido.objects.get(cliente_solicitante=cliente_id, id_pedido=session_id) #finalmente, asigna un objeto Pedido a la variable pedido
+
         if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
-            #cliente_actual = self.user.cliente
-            #pedido = Pedido.objects.create() #algo asi, ccreo que falta asignar en este punto el cliente
-            pedido.save()#guarda
-            cantidad = request.POST['cantidad'] #actualiza el campo con el valor correspondiente
-            id_producto = request.POST['id_producto']
-            producto = Producto.objects.get(id_producto=id_producto) #obtiene INSTANCIA del producto en cuestión
-            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #instancia item_pedido
+         
+            cantidad = request.POST['cantidad'] #obtiene la cantidad desde el POST
+            id_producto = request.POST['id_producto'] #obtiene el id_producto desde el POST
+            producto = Producto.objects.get(id_producto=id_producto) #obtiene instancia del producto agregado y la asigna a 'producto'
+            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #lo mismo con item_pedido
    
-            item_pedido.save()    
+            item_pedido.save() #y guarda   
     
         item_pedido.save() #guarda
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
@@ -140,55 +134,6 @@ class ProductoListView(ListView,LoginRequiredMixin):
 
 """
 
-class TareasListView(ListView): #listview es un class-based-view de django, que da la funcionalidad para mostrar datos en formato de lista.
-    #los parámetros se asignan a variables
-    model = Tarea #se indica modelo
-    template_name = "gestor_app/listview_tareas.html" #nombre del template
-    ordering = ['vencimiento_fecha', 'vencimiento_hora'] #orden, se dan dos keys, porque la fecha y hora en mi modelo son dos variables separadas
-
-    def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
-        context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
-        tarea_form = TareaForm() #se instancia un formulario TareaForm vacío
-        context['tarea_form'] = tarea_form #se agrega el tarea_form al dict de contexto 
-        
-        return context #contexto final
-
-    def get_queryset(self): #override del método de la clase padre para obtener los queryset que necesitemos para dar la funcionalidad de filtrado
-        queryset = super().get_queryset() #super() a la clase padre, para obtener el queryset inicial
-    
-        estado_filter = self.request.GET.get('estado_filter') #si se ha seleccionado un filtro de estado, se asigna a esta variable
-        categoria_filter = self.request.GET.get('categoria_filter') #si se ha seleccionado un filtro de categoría, se asigna a esta variable
-        #estas variables no se asignan si el usuario no selecciona filtros
-
-        user = self.request.user #se asigna el usuario logueado a una variable para usarlo más abajo.
-
-        #si se cumplen las siguientes pruebas lógicas, se realiza un queryset con los parámetros indicados por los choicefields:
-
-        if estado_filter and categoria_filter: # si el usuario ha filtrado por estado Y categoría            
-            queryset = queryset.filter(estado=estado_filter, categoría=categoria_filter, usuario=user)
-             
-        elif estado_filter: # si el usuario ha filtrado sólo por estado,
-            # Filtering by estado only
-            queryset = queryset.filter(estado=estado_filter, usuario=user)
-        elif categoria_filter: # si el usuario ha filtrado sólo por categoría,
-            # Filtering by categoria only
-            queryset = queryset.filter(categoría=categoria_filter, usuario=user)
-        
-        else: #si el usuario no ha seleccionado filtros:
-            queryset = queryset.filter(usuario=user)
-
-        return queryset
-    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView)
-        tarea_id = request.POST.get('tarea_id') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
-        tarea = Tarea.objects.get(id=tarea_id) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
-
-        if 'estado' in request.POST: #si en el POST viene un campo 'estado':
-            tarea.estado = request.POST['estado'] #actualiza el campo con el valor correspondiente
-        elif 'categoria' in request.POST: #si en el POST viene un campo 'categoría':
-            tarea.categoría = request.POST['categoria'] #acrualiza el campo con el valor correspondiente
-        
-        tarea.save() #guarda
-        return redirect('tareas-list') #redirige al listview, reflejándose el cambio de inmediato.
 
 def pedido_manual(request):
     form = pedidos_manuales()
