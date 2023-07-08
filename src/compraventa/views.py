@@ -80,7 +80,8 @@ def logout_view(request):
 
 class ProductoListView(ListView,LoginRequiredMixin):
     model = Producto
-    paginate_by = 10  # if pagination is desired
+    paginate_by = 10
+ 
     
 
     def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
@@ -95,13 +96,14 @@ class ProductoListView(ListView,LoginRequiredMixin):
         #id_producto = request.POST.get('id_producto') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
         #producto = Producto.objects.get(id_producto=id_producto) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
         #item_pedido = ItemPedido.objects.get(id=id_producto)
-        
-
+        object_id = request.session
+         #número de sesión
+        print("object id:", object_id)
         user_id = request.user.id #id de usuario logueado
        
         cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
         #relación 1 a 1 con un usuario.
-       
+        
         pedido = Pedido.objects.create(cliente_solicitante=cliente_id) #TODO: encontrar la forma de que se mantenga el nro de pedido
         #y no se genere un nuevo pedido cada vez que se genera un item_pedido
        
