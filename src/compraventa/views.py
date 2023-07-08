@@ -9,7 +9,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.sessions.models import Session #manejo de sesiones
 #from .forms import pedidos_manuales, pedidos_manuales_cliente
 import datetime
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -96,17 +97,24 @@ class ProductoListView(ListView,LoginRequiredMixin):
         #id_producto = request.POST.get('id_producto') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
         #producto = Producto.objects.get(id_producto=id_producto) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
         #item_pedido = ItemPedido.objects.get(id=id_producto)
-        object_id = request.session
+
+        if not request.session.session_key: #asegurarse de que exista sesión
+            request.session.save()
+        session_id = request.session.session_key #obtiene session_id, para asignarlo luego a pk de Pedido
+
+        print("session:key: **************", session_id)
+     
          #número de sesión
-        print("object id:", object_id)
         user_id = request.user.id #id de usuario logueado
        
         cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
         #relación 1 a 1 con un usuario.
-        
-        pedido = Pedido.objects.create(cliente_solicitante=cliente_id) #TODO: encontrar la forma de que se mantenga el nro de pedido
+        pedido = Pedido.objects.filter(id_pedido=session_id).exists()
+        if not pedido:
+            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=cliente_id)
+        pedido = Pedido.objects.get(cliente_solicitante=cliente_id, id_pedido=session_id) #TODO: encontrar la forma de que se mantenga el nro de pedido
         #y no se genere un nuevo pedido cada vez que se genera un item_pedido
-       
+    
         if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
             #cliente_actual = self.user.cliente
             #pedido = Pedido.objects.create() #algo asi, ccreo que falta asignar en este punto el cliente
