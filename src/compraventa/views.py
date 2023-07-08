@@ -81,7 +81,7 @@ def logout_view(request):
 
 class ProductoListView(ListView):
     model = Producto
-    paginate_by = 10
+    #paginate_by = 10 para usar falta implementar en template
  
     def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
@@ -124,7 +124,34 @@ class ProductoListView(ListView):
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
  
 
+class GestiónPedidoListView(ListView):
+    model = Pedido
+    paginate_by = 15
+    
+ 
+    def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
+        context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
+        pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
+        itempedido_form = ItemPedidoForm() #formulario vacío
+        context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
+        context['itempedido_form'] = itempedido_form #y el otro form
+        return context #lista de contextos final   
+    
+    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
+        #pedidos = Pedido.objects.all #todos los pedidos
 
+      
+        if 'estado_despacho' in request.POST: #si en el POST viene un campo 'estado_despacho':
+            id_pedido = request.POST.get('pedido') #asigna el id_pedido que viene en el post a una variable
+            pedido = Producto.objects.get(id_pedido=id_pedido) #obtiene instancia del pedido a modificar y la asigna a 'pedido'
+            pedido.id_pedido = request.POST['id_pedido'] #obtiene el id_pedido desde el POST y le hace un update
+         
+        else:
+            pedido.save()
+    
+        pedido.save() #guarda
+        return redirect('gestion-pedidos') #redirige al listview, reflejándose el cambio de inmediato.
+ 
 
 
 
