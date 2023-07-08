@@ -179,12 +179,72 @@ class GestiónPedidoListView(ListView):
         return redirect('gestion-pedidos') #redirige al listview, reflejándose el cambio de inmediato.
  
 
+class TomarPedidoListView(ListView):
+    model = Producto
+    #paginate_by = 10 para usar falta implementar en template
+ 
+    def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
+        context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
+        pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
+        itempedido_form = ItemPedidoForm() #formulario vacío
+        context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
+        context['itempedido_form'] = itempedido_form #y el otro form
+        return context #lista de contextos final   
+    
+    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
+        #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
+        
 
+        if not request.session.session_key: #asegurarse de que exista sesión y que tenga asignada un session_key (en SOF decía que podía darse el caso)
+            request.session.save()
+        session_id = request.session.session_key #obtiene session_key, para asignarlo luego a pk de Pedido
+      
+        user_id = request.user.id #id de usuario logueado
+       
+        cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
+        #relación 1 a 1 con un usuario.
 
+        pedido = Pedido.objects.filter(id_pedido=session_id).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
+        # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
 
+        if not pedido: #si no hay un pedido
+            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=cliente_id) #crea uno
+        pedido = Pedido.objects.get(cliente_solicitante=cliente_id, id_pedido=session_id) #finalmente, asigna un objeto Pedido a la variable pedido
 
+        if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
+         
+            cantidad = request.POST['cantidad'] #obtiene la cantidad desde el POST
+            id_producto = request.POST['id_producto'] #obtiene el id_producto desde el POST
+            producto = Producto.objects.get(id_producto=id_producto) #obtiene instancia del producto agregado y la asigna a 'producto'
+            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #lo mismo con item_pedido
+   
+            item_pedido.save() #y guarda   
+    
+        item_pedido.save() #guarda
+        return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
 
+def buscar_usuario(request):
+    if request.method == "POST":
+        búsqueda_usuario = request.POST['búsqueda_usuario']
+        nombres_encontrados = Cliente.objects.filter(nombres__icontains=búsqueda_usuario)
+        apellidos_encontrados = Cliente.objects.filter(apellidos__icontains=búsqueda_usuario)
+        ruts_encontrados = Cliente.objects.filter(rut__icontains=búsqueda_usuario)
+        encontrados = nombres_encontrados | ruts_encontrados | apellidos_encontrados
+        return render(request, 'compraventa/tomar_pedido.html', {'búsqueda_usuario':búsqueda_usuario, 'encontrados':encontrados})
+    
+    else:
+        return render(request, 'compraventa/tomar_pedido.html', {})
 
+def tomar_pedido_paso2(request):
+        
+    if request.method == "GET":
+        cliente_elegido = request.GET['id_cliente']
+        return render(request, 'compraventa/tomar_pedido_paso2.html', {'cliente_elegido':cliente_elegido})
+    
+    else:
+        return render(request, 'compraventa/tomar_pedido_paso2.html', {})
+
+     
 """
 
 
