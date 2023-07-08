@@ -3,6 +3,8 @@
   {% block body %}
   <div class="mt-1 ml-1">
     <h1>Gestión de pedidos</h1>
+    <button onclick="window.location.href='{% url 'productos' %}';">Tomar un Pedido</button>
+
     <table class="table table-striped-columns">
         <thead>
             <tr>
@@ -23,7 +25,18 @@
                 <td>{{ pedido.cliente_solicitante }}</td>
                 <td>{{ pedido.fecha_pedido }}</td>
                 <td>{{ pedido.tiene_despacho }}</td>
-                <td>{{ pedido.estado_despacho }}</td>
+                <td><form method="post" action="{% url 'gestion-pedidos' %}">
+                  {% csrf_token %}
+              
+                  <select name="estado_despacho" onchange="this.form.submit()">
+                    {% for choice in pedido_form.fields.estado_despacho.choices %}
+                      <option value="{{ choice.0 }}" {% if choice.0 == pedido.estado_despacho %}selected{% endif %}>
+                        {{ choice.1 }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <input type="hidden" name="id_pedido" value="{{ pedido.id_pedido }}">
+                </form></td>
                 <td>{{ pedido.direccion_despacho }}</td>
                 <td>$ subtotal</td>
                 <td>$ total</td>

@@ -126,8 +126,34 @@ class ProductoListView(ListView):
 
 class GestiónPedidoListView(ListView):
     model = Pedido
-    paginate_by = 15
+    paginate_by = 15 #
     
+
+    def get_queryset(self): #override del método de la clase padre para obtener los queryset que necesitemos para dar la funcionalidad de filtrado
+        queryset = super().get_queryset() #super() a la clase padre, para obtener el queryset inicial
+    
+        tiene_despacho_filter = self.request.GET.get('tiene_despacho_filter')
+        estado_despacho_filter = self.request.GET.get('estado_despacho_filter') #si se ha seleccionado un filtro de estado, se asigna a esta variable
+        
+
+        #cliente = self.request.user #se asigna el usuario logueado a una variable para usarlo más abajo.
+
+        #si se cumplen las siguientes pruebas lógicas, se realiza un queryset con los parámetros indicados por los choicefields:
+
+        if estado_despacho_filter and tiene_despacho_filter: # si el usuario ha filtrado por estado Y categoría            
+            queryset = queryset.filter(estado_despacho=estado_despacho_filter, tiene_despacho=tiene_despacho_filter)
+             
+        elif estado_despacho_filter: # si el usuario ha filtrado sólo por estado,
+            # Filtering by estado only
+            queryset = queryset.filter(estado_despacho=estado_despacho_filter)
+        elif tiene_despacho_filter: # si el usuario ha filtrado sólo por categoría,
+            # Filtering by categoria only
+            queryset = queryset.filter(tiene_despacho=tiene_despacho_filter)
+        
+        else: #si el usuario no ha seleccionado filtros:
+            queryset = Pedido.objects.all()
+
+        return queryset
  
     def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
