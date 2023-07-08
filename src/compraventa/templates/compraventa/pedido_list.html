@@ -2,9 +2,14 @@
 
   {% block body %}
   <div class="mt-1 ml-1">
-    <h1>Gestión de pedidos</h1>
-    <button onclick="window.location.href='{% url 'productos' %}';">Tomar un Pedido</button>
-
+    <div class="row">
+      <div class="col">
+          <p>Gestión de pedidos</p>
+      </div>
+      <div class="col">
+          <button class="btn btn-primary" onclick="window.location.href='{% url 'productos' %}';">Tomar un Pedido</button>
+      </div>
+  
     <table class="table table-striped-columns">
         <thead>
             <tr>

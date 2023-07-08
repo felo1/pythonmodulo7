@@ -126,7 +126,7 @@ class ProductoListView(ListView):
 
 class GestiónPedidoListView(ListView):
     model = Pedido
-    paginate_by = 15 #
+    paginate_by = 10 #https://docs.djangoproject.com/en/4.2/topics/pagination/#paginating-a-listview
     
 
     def get_queryset(self): #override del método de la clase padre para obtener los queryset que necesitemos para dar la funcionalidad de filtrado
