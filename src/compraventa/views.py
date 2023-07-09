@@ -16,6 +16,8 @@ import datetime
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group, User
 import uuid
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 # Create your views here.
 #
 def index(request):
@@ -80,7 +82,7 @@ def logout_view(request):
 
 
 
-class ProductoListView(ListView):
+class ProductoListView(LoginRequiredMixin, ListView):
     model = Producto
     #paginate_by = 10 para usar falta implementar en template
  
@@ -125,7 +127,7 @@ class ProductoListView(ListView):
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
  
 
-class GestiónPedidoListView(ListView):
+class GestiónPedidoListView(LoginRequiredMixin, ListView):
     model = Pedido
     paginate_by = 10 #https://docs.djangoproject.com/en/4.2/topics/pagination/#paginating-a-listview
     
@@ -224,6 +226,7 @@ class TomarPedidoListView(ListView):
         item_pedido.save() #guarda
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
 
+@login_required
 def buscar_usuario(request):
     if request.method == "POST":
         búsqueda_usuario = request.POST['búsqueda_usuario']
@@ -235,7 +238,8 @@ def buscar_usuario(request):
     
     else:
         return render(request, 'compraventa/tomar_pedido.html', {})
-
+    
+@login_required
 def tomar_pedido_paso2(request):
         
     if request.method == "GET":
@@ -246,7 +250,8 @@ def tomar_pedido_paso2(request):
     
     else:
         return render(request, 'compraventa/tomar_pedido_paso2.html', {})
-
+    
+@login_required
 def tomar_pedido_paso3(request):
         
     if request.method == "GET":
