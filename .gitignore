@@ -4656,3 +4656,5 @@ src/compraventa/migrations/__pycache__/0005_pedido_tiene_despacho_and_more.cpyth
 src/compraventa/migrations/__pycache__/0006_alter_pedido_id_pedido_alter_producto_id_producto.cpython-311.pyc
 src/compraventa/migrations/__pycache__/0007_alter_pedido_cliente_solicitante_and_more.cpython-311.pyc
 src/proyecto/__pycache__/settings.cpython-311.pyc
+src/db.sqlite3
+src/db.sqlite3
