@@ -16,6 +16,10 @@ import datetime
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group, User
 import uuid
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ObjectDoesNotExist
+
+
 # Create your views here.
 #
 def index(request):
@@ -47,12 +51,17 @@ def login_view(request): #el form está directo en el template login.html
 def registrar_usuario(request):
     if request.method == 'POST':
         form = RegistrarUsuarioForm(request.POST)
-        print(form)
         if form.is_valid():
             
             user = form.save() #guardar formulario
-            grupo = Group.objects.get(name='usuario_cliente') #buscar el grupo
-            user.groups.add(grupo)  #asignarlo al usuario
+            try:
+                grupo = Group.objects.get(name='usuario_cliente')  # buscar el grupo
+                user.groups.add(grupo)  # asignarlo al usuario
+            except ObjectDoesNotExist:
+                #En el caso de que en revisión no creen el grupo primero:
+                grupo = Group.objects.create(name='usuario_cliente')
+                user.groups.add(grupo)  # asignarlo al usuario    
+
             cliente = Cliente(
                 user=user,
                 nombres=form.cleaned_data['nombres'],
@@ -80,7 +89,7 @@ def logout_view(request):
 
 
 
-class ProductoListView(ListView):
+class ProductoListView(LoginRequiredMixin, ListView):
     model = Producto
     #paginate_by = 10 para usar falta implementar en template
  
@@ -124,8 +133,22 @@ class ProductoListView(ListView):
         item_pedido.save() #guarda
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
  
+#clon de Gestionplview pa que clientes puedan ver sus pedidos
+class ClientePedidoListView(LoginRequiredMixin, ListView):
+    model = Pedido
+    paginate_by = 10
+    #cliente_id = Cliente.objects.get(user_id=user_id)
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        #acá está el filtro forzoso
+        return queryset.filter(cliente_solicitante=self.request.user.id)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
 
-class GestiónPedidoListView(ListView):
+
+class GestiónPedidoListView(LoginRequiredMixin, ListView):
     model = Pedido
     paginate_by = 10 #https://docs.djangoproject.com/en/4.2/topics/pagination/#paginating-a-listview
     
@@ -224,6 +247,7 @@ class TomarPedidoListView(ListView):
         item_pedido.save() #guarda
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
 
+@login_required
 def buscar_usuario(request):
     if request.method == "POST":
         búsqueda_usuario = request.POST['búsqueda_usuario']
@@ -235,7 +259,8 @@ def buscar_usuario(request):
     
     else:
         return render(request, 'compraventa/tomar_pedido.html', {})
-
+    
+@login_required
 def tomar_pedido_paso2(request):
         
     if request.method == "GET":
@@ -246,7 +271,8 @@ def tomar_pedido_paso2(request):
     
     else:
         return render(request, 'compraventa/tomar_pedido_paso2.html', {})
-
+    
+@login_required
 def tomar_pedido_paso3(request):
         
     if request.method == "GET":

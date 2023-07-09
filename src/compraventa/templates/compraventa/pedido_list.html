@@ -7,14 +7,21 @@
           <p>Gestión de pedidos</p>
       </div>
       <div class="col">
+          {% if user.is_authenticated and not user.is_staff%}
+          <button class="btn btn-primary" onclick="window.location.href='{% url 'productos' %}';">Hacer un nuevo pedido</button>
+          {%endif%}
+          {% if user.is_staff%}
           <button class="btn btn-primary" onclick="window.location.href='{% url 'productos' %}';">Tomar un Pedido</button>
+          {%endif%}
       </div>
   
     <table class="table table-striped-columns">
         <thead>
             <tr>
                 <th>Código</th>
+                {% if user.is_staff%}
                 <th>Cliente</th>
+                {%endif%}
                 <th>Fecha</th>
                 <th>Tiene Despacho</th>
                 <th>Estado Despacho</th>
@@ -27,7 +34,9 @@
             {% for pedido in object_list %}
             <tr>
                 <td>{{ pedido.id_pedido }}</td>
+                {% if user.is_staff%}
                 <td>{{ pedido.cliente_solicitante }}</td>
+                {%endif%}
                 <td>{{ pedido.fecha_pedido }}</td>
                 <td>{{ pedido.tiene_despacho }}</td>
                 <td><form method="post" action="{% url 'gestion-pedidos' %}">
@@ -43,8 +52,8 @@
                   <input type="hidden" name="id_pedido" value="{{ pedido.id_pedido }}">
                 </form></td>
                 <td>{{ pedido.direccion_despacho }}</td>
-                <td>$ subtotal</td>
-                <td>$ total</td>
+                <td>${{pedido.subtotal}}</td>
+                <td>${{pedido.total_pedido}}</td>
             </tr>
             {% endfor %}
         </tbody>
