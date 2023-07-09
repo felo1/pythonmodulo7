@@ -15,6 +15,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 import datetime
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group, User
+import uuid
 # Create your views here.
 #
 def index(request):
@@ -239,11 +240,22 @@ def tomar_pedido_paso2(request):
         
     if request.method == "GET":
         cliente_elegido = request.GET['id_cliente']
-        return render(request, 'compraventa/tomar_pedido_paso2.html', {'cliente_elegido':cliente_elegido})
+        uuid_pedido = uuid.uuid1() #se genera un uuid, que si se confirma la creación de un pedido se asignará posteriormente
+        #como id_pedido y se entregará en el GET al tomar_pedido_paso3
+        return render(request, 'compraventa/tomar_pedido_paso2.html', {'cliente_elegido':cliente_elegido, 'uuid_pedido':uuid_pedido})
     
     else:
         return render(request, 'compraventa/tomar_pedido_paso2.html', {})
 
+def tomar_pedido_paso3(request):
+        
+    if request.method == "GET":
+        id_pedido = request.GET['id_pedido']
+        
+        return render(request, 'compraventa/tomar_pedido_paso3.html', {'id_pedido':id_pedido})
+    
+    else:
+        return render(request, 'compraventa/tomar_pedido_paso3.html', {})
      
 """
 

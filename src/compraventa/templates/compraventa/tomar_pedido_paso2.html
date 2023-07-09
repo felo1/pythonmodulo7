@@ -8,6 +8,13 @@
 
 <h1> ID de cliente elegido : {{cliente_elegido}}</h1>
 
+<h2> ¿Desea crear un pedido para el usuario?<h2>
+  <form action="{% url 'tomar_pedido_paso3' %}" method="get">
+    {% csrf_token %}
+    <input type="hidden" name="id_pedido" value="{{ uuid_pedido }}">
+    <button type="submit" method="get">Confirmar</button>
+  </form>
+
 </div>
 
 {% endblock %}

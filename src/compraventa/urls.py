@@ -28,6 +28,7 @@ urlpatterns = [
     path("pedido_list", views.GestiónPedidoListView.as_view(), name="gestion-pedidos"),
     path("tomar_pedido", views.buscar_usuario, name="tomar-pedido"),
     path("tomar_pedido_paso2", views.tomar_pedido_paso2, name="tomar_pedido_paso2"),
+    path("tomar_pedido_paso3", views.tomar_pedido_paso3, name="tomar_pedido_paso3"),
 ]
 
    # path("pedido_manual", views.pedido_manual, name = "pedido_manual"),
