@@ -1,8 +1,8 @@
-from django.db.models import Sum
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+#from django.db.models import Sum
+from django.contrib import admin #para customizar admin
 
 impuesto = 19
 
@@ -47,6 +47,9 @@ class Direccion(models.Model):
     def __str__(self) -> str:
         return self.direccion
     
+class PedidoAdmin(admin.ModelAdmin):
+    list_display = ('id_pedido', 'cliente_solicitante', 'estado_despacho', 'subtotal', 'total_pedido')
+
 
 class Pedido(models.Model):
     id_pedido = models.CharField(max_length=64, primary_key=True)
@@ -66,17 +69,33 @@ class Pedido(models.Model):
     direccion_despacho = models.ForeignKey(Direccion, on_delete=models.DO_NOTHING, null=True)
     impuesto = models.IntegerField(default=19)
 
-    def subtotal(self):
-        return self.itempedido_set.aggregate(total=Sum('precio'))['total'] or 0
+    #No pude conseguir que me cargue el total y subtotal en el admin así como están, su buen rato lo intenté :c
+    #def subtotal(self):
+    #    return self.itempedido_set.aggregate(total=Sum('precio'))['total'] or 0
 
+    #siento que esta es la manera en que la hubiera hecho el anibal
+    @property
+    def subtotal(self):
+        subtotal = sum(item.cantidad * item.producto.precio for item in self.itempedido_set.all())
+        return subtotal or 0
+    
+    #def total_pedido(self):
+    #    subtotal = self.subtotal()
+    #    total_con_impuesto = subtotal + (subtotal * self.impuesto / 100)
+    #    return round(total_con_impuesto)
+    
+    @property
     def total_pedido(self):
-        subtotal = self.subtotal()
+        subtotal = self.subtotal
         total_con_impuesto = subtotal + (subtotal * self.impuesto / 100)
         return round(total_con_impuesto)
+
     
     def __str__(self):
         return 'Orden de compra N°: ' + str(self.id_pedido) + ' | Nombre de cliente: '+ self.cliente_solicitante.nombres + ' ' + self.cliente_solicitante.apellidos + " | Estado de despacho: " + self.estado_despacho
 
+
+#Pendiente: Seguimos limitados a 1 item por pedido, según veo
 class ItemPedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.DO_NOTHING, related_name='itempedido_set')
     producto = models.ForeignKey(Producto, on_delete=models.DO_NOTHING)
