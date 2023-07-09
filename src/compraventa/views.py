@@ -133,6 +133,20 @@ class ProductoListView(LoginRequiredMixin, ListView):
         item_pedido.save() #guarda
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
  
+#clon de Gestionplview pa que clientes puedan ver sus pedidos
+class ClientePedidoListView(LoginRequiredMixin, ListView):
+    model = Pedido
+    paginate_by = 10
+    #cliente_id = Cliente.objects.get(user_id=user_id)
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        #acá está el filtro forzoso
+        return queryset.filter(cliente_solicitante=self.request.user.id)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
 
 class GestiónPedidoListView(LoginRequiredMixin, ListView):
     model = Pedido
