@@ -9,11 +9,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+#from django.contrib.sessions.models import Session #manejo de sesiones
 #from .forms import pedidos_manuales, pedidos_manuales_cliente
 import datetime
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group, User
+import uuid
 # Create your views here.
 #
 def index(request):
@@ -78,109 +80,185 @@ def logout_view(request):
 
 
 
-class ProductoListView(ListView,LoginRequiredMixin):
+class ProductoListView(ListView):
     model = Producto
-    paginate_by = 10
+    #paginate_by = 10 para usar falta implementar en template
  
-    
-
     def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
         pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
         itempedido_form = ItemPedidoForm() #formulario vacío
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
-        return context #contexto final   
+        return context #lista de contextos final   
     
-    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView)
-        #id_producto = request.POST.get('id_producto') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
-        #producto = Producto.objects.get(id_producto=id_producto) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
-        #item_pedido = ItemPedido.objects.get(id=id_producto)
-        object_id = request.session
-         #número de sesión
-        print("object id:", object_id)
+    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
+        #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
+        
+
+        if not request.session.session_key: #asegurarse de que exista sesión y que tenga asignada un session_key (en SOF decía que podía darse el caso)
+            request.session.save()
+        session_id = request.session.session_key #obtiene session_key, para asignarlo luego a pk de Pedido
+      
         user_id = request.user.id #id de usuario logueado
        
         cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
         #relación 1 a 1 con un usuario.
-        
-        pedido = Pedido.objects.create(cliente_solicitante=cliente_id) #TODO: encontrar la forma de que se mantenga el nro de pedido
-        #y no se genere un nuevo pedido cada vez que se genera un item_pedido
-       
+
+        pedido = Pedido.objects.filter(id_pedido=session_id).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
+        # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
+
+        if not pedido: #si no hay un pedido
+            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=cliente_id) #crea uno
+        pedido = Pedido.objects.get(cliente_solicitante=cliente_id, id_pedido=session_id) #finalmente, asigna un objeto Pedido a la variable pedido
+
         if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
-            #cliente_actual = self.user.cliente
-            #pedido = Pedido.objects.create() #algo asi, ccreo que falta asignar en este punto el cliente
-            pedido.save()#guarda
-            cantidad = request.POST['cantidad'] #actualiza el campo con el valor correspondiente
-            id_producto = request.POST['id_producto']
-            producto = Producto.objects.get(id_producto=id_producto) #obtiene INSTANCIA del producto en cuestión
-            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #instancia item_pedido
+         
+            cantidad = request.POST['cantidad'] #obtiene la cantidad desde el POST
+            id_producto = request.POST['id_producto'] #obtiene el id_producto desde el POST
+            producto = Producto.objects.get(id_producto=id_producto) #obtiene instancia del producto agregado y la asigna a 'producto'
+            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #lo mismo con item_pedido
    
-            item_pedido.save()    
+            item_pedido.save() #y guarda   
     
         item_pedido.save() #guarda
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
  
 
-
-
-
-
-
-
-
-
-"""
-
-class TareasListView(ListView): #listview es un class-based-view de django, que da la funcionalidad para mostrar datos en formato de lista.
-    #los parámetros se asignan a variables
-    model = Tarea #se indica modelo
-    template_name = "gestor_app/listview_tareas.html" #nombre del template
-    ordering = ['vencimiento_fecha', 'vencimiento_hora'] #orden, se dan dos keys, porque la fecha y hora en mi modelo son dos variables separadas
-
-    def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
-        context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
-        tarea_form = TareaForm() #se instancia un formulario TareaForm vacío
-        context['tarea_form'] = tarea_form #se agrega el tarea_form al dict de contexto 
-        
-        return context #contexto final
+class GestiónPedidoListView(ListView):
+    model = Pedido
+    paginate_by = 10 #https://docs.djangoproject.com/en/4.2/topics/pagination/#paginating-a-listview
+    
 
     def get_queryset(self): #override del método de la clase padre para obtener los queryset que necesitemos para dar la funcionalidad de filtrado
         queryset = super().get_queryset() #super() a la clase padre, para obtener el queryset inicial
     
-        estado_filter = self.request.GET.get('estado_filter') #si se ha seleccionado un filtro de estado, se asigna a esta variable
-        categoria_filter = self.request.GET.get('categoria_filter') #si se ha seleccionado un filtro de categoría, se asigna a esta variable
-        #estas variables no se asignan si el usuario no selecciona filtros
+        tiene_despacho_filter = self.request.GET.get('tiene_despacho_filter')
+        estado_despacho_filter = self.request.GET.get('estado_despacho_filter') #si se ha seleccionado un filtro de estado, se asigna a esta variable
+        
 
-        user = self.request.user #se asigna el usuario logueado a una variable para usarlo más abajo.
+        #cliente = self.request.user #se asigna el usuario logueado a una variable para usarlo más abajo.
 
         #si se cumplen las siguientes pruebas lógicas, se realiza un queryset con los parámetros indicados por los choicefields:
 
-        if estado_filter and categoria_filter: # si el usuario ha filtrado por estado Y categoría            
-            queryset = queryset.filter(estado=estado_filter, categoría=categoria_filter, usuario=user)
+        if estado_despacho_filter and tiene_despacho_filter: # si el usuario ha filtrado por estado Y categoría            
+            queryset = queryset.filter(estado_despacho=estado_despacho_filter, tiene_despacho=tiene_despacho_filter)
              
-        elif estado_filter: # si el usuario ha filtrado sólo por estado,
+        elif estado_despacho_filter: # si el usuario ha filtrado sólo por estado,
             # Filtering by estado only
-            queryset = queryset.filter(estado=estado_filter, usuario=user)
-        elif categoria_filter: # si el usuario ha filtrado sólo por categoría,
+            queryset = queryset.filter(estado_despacho=estado_despacho_filter)
+        elif tiene_despacho_filter: # si el usuario ha filtrado sólo por categoría,
             # Filtering by categoria only
-            queryset = queryset.filter(categoría=categoria_filter, usuario=user)
+            queryset = queryset.filter(tiene_despacho=tiene_despacho_filter)
         
         else: #si el usuario no ha seleccionado filtros:
-            queryset = queryset.filter(usuario=user)
+            queryset = Pedido.objects.all()
 
         return queryset
-    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView)
-        tarea_id = request.POST.get('tarea_id') #obtiene el tarea_ide de los parámetros del POST, cada vez que se presiona "Completar" o "Eliminar"
-        tarea = Tarea.objects.get(id=tarea_id) #obtiene el objeto Tarea asociado al tarea_id obtenido en la línea anterior.
+ 
+    def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
+        context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
+        pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
+        itempedido_form = ItemPedidoForm() #formulario vacío
+        context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
+        context['itempedido_form'] = itempedido_form #y el otro form
+        return context #lista de contextos final   
+    
+    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
+        #pedidos = Pedido.objects.all #todos los pedidos
 
-        if 'estado' in request.POST: #si en el POST viene un campo 'estado':
-            tarea.estado = request.POST['estado'] #actualiza el campo con el valor correspondiente
-        elif 'categoria' in request.POST: #si en el POST viene un campo 'categoría':
-            tarea.categoría = request.POST['categoria'] #acrualiza el campo con el valor correspondiente
+      
+        if 'estado_despacho' in request.POST: #si en el POST viene un campo 'estado_despacho':
+            id_pedido = request.POST.get('pedido') #asigna el id_pedido que viene en el post a una variable
+            pedido = Producto.objects.get(id_pedido=id_pedido) #obtiene instancia del pedido a modificar y la asigna a 'pedido'
+            pedido.id_pedido = request.POST['id_pedido'] #obtiene el id_pedido desde el POST y le hace un update
+         
+        else:
+            pedido.save()
+    
+        pedido.save() #guarda
+        return redirect('gestion-pedidos') #redirige al listview, reflejándose el cambio de inmediato.
+ 
+
+class TomarPedidoListView(ListView):
+    model = Producto
+    #paginate_by = 10 para usar falta implementar en template
+ 
+    def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
+        context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
+        pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
+        itempedido_form = ItemPedidoForm() #formulario vacío
+        context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
+        context['itempedido_form'] = itempedido_form #y el otro form
+        return context #lista de contextos final   
+    
+    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
+        #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
         
-        tarea.save() #guarda
-        return redirect('tareas-list') #redirige al listview, reflejándose el cambio de inmediato.
+
+        if not request.session.session_key: #asegurarse de que exista sesión y que tenga asignada un session_key (en SOF decía que podía darse el caso)
+            request.session.save()
+        session_id = request.session.session_key #obtiene session_key, para asignarlo luego a pk de Pedido
+      
+        user_id = request.user.id #id de usuario logueado
+       
+        cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
+        #relación 1 a 1 con un usuario.
+
+        pedido = Pedido.objects.filter(id_pedido=session_id).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
+        # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
+
+        if not pedido: #si no hay un pedido
+            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=cliente_id) #crea uno
+        pedido = Pedido.objects.get(cliente_solicitante=cliente_id, id_pedido=session_id) #finalmente, asigna un objeto Pedido a la variable pedido
+
+        if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
+         
+            cantidad = request.POST['cantidad'] #obtiene la cantidad desde el POST
+            id_producto = request.POST['id_producto'] #obtiene el id_producto desde el POST
+            producto = Producto.objects.get(id_producto=id_producto) #obtiene instancia del producto agregado y la asigna a 'producto'
+            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #lo mismo con item_pedido
+   
+            item_pedido.save() #y guarda   
+    
+        item_pedido.save() #guarda
+        return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
+
+def buscar_usuario(request):
+    if request.method == "POST":
+        búsqueda_usuario = request.POST['búsqueda_usuario']
+        nombres_encontrados = Cliente.objects.filter(nombres__icontains=búsqueda_usuario)
+        apellidos_encontrados = Cliente.objects.filter(apellidos__icontains=búsqueda_usuario)
+        ruts_encontrados = Cliente.objects.filter(rut__icontains=búsqueda_usuario)
+        encontrados = nombres_encontrados | ruts_encontrados | apellidos_encontrados
+        return render(request, 'compraventa/tomar_pedido.html', {'búsqueda_usuario':búsqueda_usuario, 'encontrados':encontrados})
+    
+    else:
+        return render(request, 'compraventa/tomar_pedido.html', {})
+
+def tomar_pedido_paso2(request):
+        
+    if request.method == "GET":
+        cliente_elegido = request.GET['id_cliente']
+        uuid_pedido = uuid.uuid1() #se genera un uuid, que si se confirma la creación de un pedido se asignará posteriormente
+        #como id_pedido y se entregará en el GET al tomar_pedido_paso3
+        return render(request, 'compraventa/tomar_pedido_paso2.html', {'cliente_elegido':cliente_elegido, 'uuid_pedido':uuid_pedido})
+    
+    else:
+        return render(request, 'compraventa/tomar_pedido_paso2.html', {})
+
+def tomar_pedido_paso3(request):
+        
+    if request.method == "GET":
+        id_pedido = request.GET['id_pedido']
+        
+        return render(request, 'compraventa/tomar_pedido_paso3.html', {'id_pedido':id_pedido})
+    
+    else:
+        return render(request, 'compraventa/tomar_pedido_paso3.html', {})
+     
+"""
+
 
 def pedido_manual(request):
     form = pedidos_manuales()
