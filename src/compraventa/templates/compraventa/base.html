@@ -26,15 +26,8 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
-          {% if user.is_staff %}
-
-              <li class="nav-item">    
-          <a class="nav-item nav-link" href="">Usuario: {{user}}</a></li>
-          <li class="nav-item">
-          <a class="nav-item nav-link" href="{% url 'logout' %}">SALIR</a></li>
-          {% elif user.is_authenticated %}
-          
-            <li class="nav-item">    
+          {% if user.is_authenticated or user.is_staff %}
+          <li class="nav-item">    
           <a class="nav-item nav-link" href="">Usuario: {{user}}</a></li>
           <li class="nav-item"><a class="nav-item nav-link" href="{% url 'logout' %}">SALIR</a></li>
           <li class="nav-item"><a class="nav-item nav-link" href="{% url 'productos' %}">Agregar al Carrito</a></li>
