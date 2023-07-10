@@ -12,6 +12,7 @@
   <form action="{% url 'tomar_pedido_paso3' %}" method="get">
     {% csrf_token %}
     <input type="hidden" name="id_pedido" value="{{ uuid_pedido }}">
+    <input type="hidden" name="cliente_elegido" value="{{ cliente_elegido }}">
     <button type="submit" method="get">Confirmar</button>
   </form>
 

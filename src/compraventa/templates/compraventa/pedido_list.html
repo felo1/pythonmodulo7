@@ -28,6 +28,7 @@
                 <th>Dirección Despacho</th>
                 <th>Subtotal</th>
                 <th>Total</th>
+                <th>Ver</th>
             </tr>
         </thead>
         <tbody>
@@ -54,6 +55,14 @@
                 <td>{{ pedido.direccion_despacho }}</td>
                 <td>${{pedido.subtotal}}</td>
                 <td>${{pedido.total_pedido}}</td>
+                <td>
+                <form action="{% url 'ver_pedido' %}">
+                  {% csrf_token %}
+                 
+                  <input type="hidden" name="pedido" value="{{ pedido.id_pedido }}">
+                  <button type="submit">Ver</button>
+              </form>
+            </td>
             </tr>
             {% endfor %}
         </tbody>

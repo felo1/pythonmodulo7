@@ -137,6 +137,7 @@ class ProductoListView(LoginRequiredMixin, ListView):
 class ClientePedidoListView(LoginRequiredMixin, ListView):
     model = Pedido
     paginate_by = 10
+  
     #cliente_id = Cliente.objects.get(user_id=user_id)
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -151,6 +152,7 @@ class ClientePedidoListView(LoginRequiredMixin, ListView):
 class GestiónPedidoListView(LoginRequiredMixin, ListView):
     model = Pedido
     paginate_by = 10 #https://docs.djangoproject.com/en/4.2/topics/pagination/#paginating-a-listview
+  
     
 
     def get_queryset(self): #override del método de la clase padre para obtener los queryset que necesitemos para dar la funcionalidad de filtrado
@@ -165,17 +167,17 @@ class GestiónPedidoListView(LoginRequiredMixin, ListView):
         #si se cumplen las siguientes pruebas lógicas, se realiza un queryset con los parámetros indicados por los choicefields:
 
         if estado_despacho_filter and tiene_despacho_filter: # si el usuario ha filtrado por estado Y categoría            
-            queryset = queryset.filter(estado_despacho=estado_despacho_filter, tiene_despacho=tiene_despacho_filter)
+            queryset = queryset.filter(estado_despacho=estado_despacho_filter, tiene_despacho=tiene_despacho_filter).order_by('-fecha_pedido')
              
         elif estado_despacho_filter: # si el usuario ha filtrado sólo por estado,
             # Filtering by estado only
-            queryset = queryset.filter(estado_despacho=estado_despacho_filter)
+            queryset = queryset.filter(estado_despacho=estado_despacho_filter).order_by('-fecha_pedido')
         elif tiene_despacho_filter: # si el usuario ha filtrado sólo por categoría,
             # Filtering by categoria only
-            queryset = queryset.filter(tiene_despacho=tiene_despacho_filter)
+            queryset = queryset.filter(tiene_despacho=tiene_despacho_filter).order_by('-fecha_pedido')
         
         else: #si el usuario no ha seleccionado filtros:
-            queryset = Pedido.objects.all()
+            queryset = Pedido.objects.all().order_by('-fecha_pedido')
 
         return queryset
  
@@ -272,17 +274,70 @@ def tomar_pedido_paso2(request):
     else:
         return render(request, 'compraventa/tomar_pedido_paso2.html', {})
     
-@login_required
-def tomar_pedido_paso3(request):
+#@login_required
+class Tomar_pedido_paso3(ListView):
+
+    model = Producto
+    paginate_by = 10
+    template_name = 'compraventa/tomar_pedido_paso3.html'
+
+    def get_queryset(self):
+        global id_pedido_actual #para poder usar la variable en el método get_context_data. se le pone un nombre distinto para evitar
+        #toparse con otros id_pedido de otras partes del código
+        global cliente_actual # lo mismo
+        id_pedido_actual = self.request.GET.get('id_pedido')
+        cliente_actual = self.request.GET.get('cliente_elegido')
+        queryset = Producto.objects.all()
+        return queryset
         
-    if request.method == "GET":
-        id_pedido = request.GET['id_pedido']
-        
-        return render(request, 'compraventa/tomar_pedido_paso3.html', {'id_pedido':id_pedido})
+ 
+    def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
+        global context
+        context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
+        pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
+        itempedido_form = ItemPedidoForm() #formulario vacío
+        objeto_cliente_actual = Cliente.objects.get(id=cliente_actual) #como cliente_actual es solo el número, se crea esto para obtener otros datos, como nombres
+        context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
+        context['itempedido_form'] = itempedido_form #y el otro form
+        context['id_pedido'] = id_pedido_actual #se asigna desde la variable global generada en el método get_queryset
+        context['cliente_actual'] = cliente_actual
+        context['objeto_cliente_actual'] = objeto_cliente_actual
+        return context #lista de contextos final   
     
-    else:
+    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
+        #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
+        
+    
+        pedido = Pedido.objects.filter(id_pedido=id_pedido_actual).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
+        # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
+
+        if not pedido: #si no hay un pedido
+            cliente = Cliente.objects.get(id = cliente_actual)
+            Pedido.objects.create(id_pedido=id_pedido_actual, cliente_solicitante=cliente) #crea uno
+        pedido = Pedido.objects.get(cliente_solicitante=cliente_actual, id_pedido=id_pedido_actual) #finalmente, asigna un objeto Pedido a la variable pedido
+    
+        if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
+         
+            cantidad = request.POST['cantidad'] #obtiene la cantidad desde el POST
+            id_producto = request.POST['id_producto'] #obtiene el id_producto desde el POST
+            producto = Producto.objects.get(id_producto=id_producto) #obtiene instancia del producto agregado y la asigna a 'producto'
+            item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #lo mismo con item_pedido
+            
+            item_pedido.save() #y guarda   
+            return render(request, 'compraventa/tomar_pedido_paso3.html', context=context)
+        item_pedido.save() #guarda
         return render(request, 'compraventa/tomar_pedido_paso3.html', {})
-     
+        
+@login_required
+def ver_pedido(request): 
+
+    id_pedido = request.GET.get('id_pedido')
+    pedido = Pedido.objects.get(id_pedido=id_pedido)
+    productos = ItemPedido.objects.filter(pedido_id=id_pedido) #excluye completadas y luego filtra solo usuario logueado
+    
+    return render(request, 'compraventa/ver_pedido.html', { 'pedido':pedido, 'productos':productos})
+
+
 """
 
 

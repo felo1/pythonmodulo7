@@ -6,9 +6,40 @@
 
 <div class= "mt-1 ml-1">
 
-<h1> Generando el pedido  {{id_pedido}}</h1>
+<h1> Agregue los productos  </h1>
+<h2> Cliente : {{objeto_cliente_actual}}</h2>
+<h2> Pedido : {{id_pedido}}</h2>
 
-
+    <table class="table table-striped-columns">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Modelo</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Agregar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for producto in object_list %}
+          <tr>
+            <td>{{ producto.nombre }}</td>
+            <td>{{ producto.modelo }}</td>
+            <td>{{ producto.descripcion }}</td>
+            <td>${{ producto.precio }}</td>
+            <td><form method="post">
+                {% csrf_token %}
+                <input type="number" id="cantidad-{{ producto.id }}" name="cantidad">
+                <input type="hidden" name="id_producto" value="{{ producto.id_producto }}">
+                
+                <button type="submit">Agregar</button>
+            </form>
+            
+                </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
 </div>
 
