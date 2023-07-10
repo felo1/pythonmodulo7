@@ -59,7 +59,7 @@
                 <form action="{% url 'ver_pedido' %}">
                   {% csrf_token %}
                  
-                  <input type="hidden" name="pedido" value="{{ pedido.id_pedido }}">
+                  <input type="hidden" name="id_pedido" value="{{ pedido.id_pedido }}">
                   <button type="submit">Ver</button>
               </form>
             </td>

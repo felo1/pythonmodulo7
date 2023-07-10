@@ -332,6 +332,7 @@ class Tomar_pedido_paso3(ListView):
 def ver_pedido(request): 
 
     id_pedido = request.GET.get('id_pedido')
+    #print("------------------------------------------------------------------- id pedido-------", id_pedido)
     pedido = Pedido.objects.get(id_pedido=id_pedido)
     productos = ItemPedido.objects.filter(pedido_id=id_pedido) #excluye completadas y luego filtra solo usuario logueado
     
