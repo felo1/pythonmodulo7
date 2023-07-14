@@ -346,20 +346,6 @@ class Tomar_pedido_paso3(ListView):
             return render(request, 'compraventa/tomar_pedido_paso3.html', context=context)
         item_pedido.save() #guarda
         return render(request, 'compraventa/tomar_pedido_paso3.html', {})
-<<<<<<< HEAD
-        
-@login_required
-def ver_pedido(request): 
-
-    id_pedido = request.GET.get('id_pedido')
-    #print("------------------------------------------------------------------- id pedido-------", id_pedido)
-    pedido = Pedido.objects.get(id_pedido=id_pedido)
-    productos = ItemPedido.objects.filter(pedido_id=id_pedido) #excluye completadas y luego filtra solo usuario logueado
-    
-    return render(request, 'compraventa/ver_pedido.html', { 'pedido':pedido, 'productos':productos})
-
-
-=======
      
 
 
@@ -377,7 +363,6 @@ class PedidoEditView(UpdateView): #Updateview es un class-based view usado para 
        
         pedido.save() #se guarda
         return pedido
->>>>>>> 49ca782832bad26d17760869e9b3501e7c99c1ba
 """
 
 Request Method:	POST
