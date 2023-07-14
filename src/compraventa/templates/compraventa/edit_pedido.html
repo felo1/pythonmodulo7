@@ -1,0 +1,17 @@
+{% extends "compraventa/base.html" %}
+
+{% block body %}
+
+  <h1>Editar pedido n° {{pedido.id_pedido}}</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button class="btn btn-outline-primary" type="submit">Guardar cambios</button>
+  
+  </form>
+
+
+{% endblock %}
+
+
