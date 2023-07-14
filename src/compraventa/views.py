@@ -151,14 +151,18 @@ class ClientePedidoListView(ListView):
     #cliente_id = Cliente.objects.get(user_id=user_id)
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = Pedido.objects.filter(cliente_solicitante=self.request.user.id)
-        #acá está el filtro forzoso
+        usuario = self.request.user.id #obtiene el usuario(no cliente)
+        cliente = Cliente.objects.get(user_id=usuario) #busca el cliente asociado al usuario (one to one)
+        queryset = Pedido.objects.filter(cliente_solicitante=cliente) #queryset de clientes
+       
         return queryset
         #
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["pedidos"] = Pedido.objects.all()
+        
+
         return context
 
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
