@@ -32,7 +32,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for pedido in object_list %}
+            {% for pedido in 'pedido' %}
             <tr>
                 <td>{{ pedido.id_pedido }}</td>
                 {% if user.is_staff%}
@@ -55,11 +55,13 @@
                 <td>{{ pedido.direccion_despacho }}</td>
                 <td>${{pedido.subtotal}}</td>
                 <td>${{pedido.total_pedido}}</td>
-                <td><a class="btn btn-outline-primary" href="{% url 'edit_pedido' pedido.id_pedido %}" role="button">Editar</a></td>
+                {#<!--<td><a class="btn btn-outline-primary" href="{% url 'edit_pedido' pedido.id_pedido %}" role="button">Editar</a></td>-->#}
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- Pagination -->
 
     <div class="pagination">
       <span class="step-links">
