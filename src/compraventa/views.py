@@ -1,6 +1,7 @@
 
 from django.utils import timezone
 from django.views.generic.list import ListView
+from django.views.generic import UpdateView
 from django.shortcuts import render
 from .models import Categoria, Cliente, Pedido, Producto, ItemPedido
 from .forms import RegistrarUsuarioForm, PedidoForm, ItemPedidoForm
@@ -13,7 +14,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 #from django.contrib.sessions.models import Session #manejo de sesiones
 #from .forms import pedidos_manuales, pedidos_manuales_cliente
 import datetime
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import Group, User
 import uuid
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -23,9 +24,13 @@ from django.core.exceptions import ObjectDoesNotExist
 # Create your views here.
 #
 def index(request):
-    return render(request, 'compraventa/index.html')
-
-
+        usuario = request.user.id
+       
+        pedidos = Pedido.objects.all();
+        #pedidos = Pedido.objects.filter(usuario=request.user).order_by('id_pedido')
+        return render(request, 'compraventa/pedido_list_cliente.html', {'pedidos': pedidos}) #== esta dando 1
+        #pedidos = Pedido.objects.filter(usuario=request.user).order_by('id_pedido')
+    #return render(request, 'compraventa/index.html')
 
 def login_view(request): #el form está directo en el template login.html
     if 'next' in request.GET:
@@ -104,7 +109,6 @@ class ProductoListView(LoginRequiredMixin, ListView):
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
         #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
         
-
         if not request.session.session_key: #asegurarse de que exista sesión y que tenga asignada un session_key (en SOF decía que podía darse el caso)
             request.session.save()
         session_id = request.session.session_key #obtiene session_key, para asignarlo luego a pk de Pedido
@@ -134,19 +138,37 @@ class ProductoListView(LoginRequiredMixin, ListView):
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
  
 #clon de Gestionplview pa que clientes puedan ver sus pedidos
-class ClientePedidoListView(LoginRequiredMixin, ListView):
+class SoloStaffMixin(LoginRequiredMixin, UserPassesTestMixin):
+
+    def test_func(self):
+        return self.request.user.is_admin or self.request.user.is_staff
+
+
+class ClientePedidoListView(ListView):
     model = Pedido
     paginate_by = 10
   
     #cliente_id = Cliente.objects.get(user_id=user_id)
     def get_queryset(self):
         queryset = super().get_queryset()
+        queryset = Pedido.objects.filter(cliente_solicitante=self.request.user.id)
         #acá está el filtro forzoso
-        return queryset.filter(cliente_solicitante=self.request.user.id)
+        return queryset
+        #
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["pedidos"] = Pedido.objects.all()
         return context
+
+    def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
+        #pedidos = Pedido.objects.all #todos los pedidos
+
+        id_pedido = request.POST.get('pedido') #asigna el id_pedido que viene en el post a una variable
+        pedido = Producto.objects.get(id_pedido=id_pedido) #obtiene instancia del pedido a modificar y la asigna a 'pedido'
+        pedido.id_pedido = request.POST['id_pedido'] #obtiene el id_pedido desde el POST y le hace un update
+        pedido.save() #guarda
+        return redirect('edit_pedido') #redirige al listview, reflejándose el cambio de inmediato.
 
 
 class GestiónPedidoListView(LoginRequiredMixin, ListView):
@@ -154,16 +176,13 @@ class GestiónPedidoListView(LoginRequiredMixin, ListView):
     paginate_by = 10 #https://docs.djangoproject.com/en/4.2/topics/pagination/#paginating-a-listview
   
     
-
     def get_queryset(self): #override del método de la clase padre para obtener los queryset que necesitemos para dar la funcionalidad de filtrado
         queryset = super().get_queryset() #super() a la clase padre, para obtener el queryset inicial
     
         tiene_despacho_filter = self.request.GET.get('tiene_despacho_filter')
         estado_despacho_filter = self.request.GET.get('estado_despacho_filter') #si se ha seleccionado un filtro de estado, se asigna a esta variable
         
-
         #cliente = self.request.user #se asigna el usuario logueado a una variable para usarlo más abajo.
-
         #si se cumplen las siguientes pruebas lógicas, se realiza un queryset con los parámetros indicados por los choicefields:
 
         if estado_despacho_filter and tiene_despacho_filter: # si el usuario ha filtrado por estado Y categoría            
@@ -327,20 +346,31 @@ class Tomar_pedido_paso3(ListView):
             return render(request, 'compraventa/tomar_pedido_paso3.html', context=context)
         item_pedido.save() #guarda
         return render(request, 'compraventa/tomar_pedido_paso3.html', {})
-        
-@login_required
-def ver_pedido(request): 
-
-    id_pedido = request.GET.get('id_pedido')
-    #print("------------------------------------------------------------------- id pedido-------", id_pedido)
-    pedido = Pedido.objects.get(id_pedido=id_pedido)
-    productos = ItemPedido.objects.filter(pedido_id=id_pedido) #excluye completadas y luego filtra solo usuario logueado
-    
-    return render(request, 'compraventa/ver_pedido.html', { 'pedido':pedido, 'productos':productos})
+     
 
 
+
+class PedidoEditView(UpdateView): #Updateview es un class-based view usado para actualizar datos
+    model = Pedido #se elige el modelo
+    form_class = PedidoForm #se elige el formulario
+    template_name = "compraventa/edit_pedido.html" #se elige el template
+
+    def get_success_url(self): #override del metodo que la clase usa al completar exitosamente la edición. En este paso redirige al list-view
+        return reverse('pedido_list')
+
+    def get_object(self, queryset=None): #override del método de la clase padre.
+        pedido = super().get_object(queryset) #obtiene el objeto tarea y lo asigna a esta variable
+       
+        pedido.save() #se guarda
+        return pedido
 """
 
+Request Method:	POST
+Request URL:	http://127.0.0.1:8000/pedidos/1/edit/
+Django Version:	4.2.2
+Exception Type:	NoReverseMatch
+Exception Value:	
+Reverse for 'pedido-list' not found. 'pedido-list' is not a valid view function or pattern name.
 
 def pedido_manual(request):
     form = pedidos_manuales()
