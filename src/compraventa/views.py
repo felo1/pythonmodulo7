@@ -147,13 +147,18 @@ class SoloStaffMixin(LoginRequiredMixin, UserPassesTestMixin):
 class ClientePedidoListView(ListView):
     model = Pedido
     paginate_by = 10
+    template_name = 'compraventa/pedido_list_cliente.html'
+  
   
     #cliente_id = Cliente.objects.get(user_id=user_id)
     def get_queryset(self):
         queryset = super().get_queryset()
         usuario = self.request.user.id #obtiene el usuario(no cliente)
+        print("------------------usuario:", usuario)
         cliente = Cliente.objects.get(user_id=usuario) #busca el cliente asociado al usuario (one to one)
-        queryset = Pedido.objects.filter(cliente_solicitante=cliente) #queryset de clientes
+        print("------------------cliente:", cliente)
+        queryset = Pedido.objects.filter(cliente_solicitante=cliente).order_by('-fecha_pedido') #queryset de clientes
+        print("------------------queryset", queryset)
        
         return queryset
         #
@@ -161,8 +166,16 @@ class ClientePedidoListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["pedidos"] = Pedido.objects.all()
+        ##################intento de pasarle el estado_despacho al template como un string.
+        #primero convertimos el query a una lista de diccionarios:
+        #pedido_list = list(Pedido.objects.all().values())
         
+        #luego, cad item de diccionario lo agregamos al context:
+    
+        #for item in pedido_list:
+        #context["pedidos"] = item
 
+        #print("--------------------context:", context)
         return context
 
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
@@ -178,6 +191,7 @@ class ClientePedidoListView(ListView):
 class GestiónPedidoListView(LoginRequiredMixin, ListView):
     model = Pedido
     paginate_by = 10 #https://docs.djangoproject.com/en/4.2/topics/pagination/#paginating-a-listview
+    template_name = 'compraventa/pedido_list_gestion.html'
   
     
     def get_queryset(self): #override del método de la clase padre para obtener los queryset que necesitemos para dar la funcionalidad de filtrado

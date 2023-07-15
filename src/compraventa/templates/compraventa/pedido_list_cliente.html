@@ -14,14 +14,14 @@
           <button class="btn btn-primary" onclick="window.location.href='{% url 'productos' %}';">Tomar un Pedido</button>
           {%endif%}
       </div>
-  
+      
+      
+    
     <table class="table table-striped-columns">
         <thead>
             <tr>
                 <th>Código</th>
-                {% if user.is_staff%}
                 <th>Cliente</th>
-                {%endif%}
                 <th>Fecha</th>
                 <th>Tiene Despacho</th>
                 <th>Estado Despacho</th>
@@ -32,23 +32,23 @@
             </tr>
         </thead>
         <tbody>
-            {% for pedido in 'pedidos' %}
+            {% for pedido in object_list %}
             <tr>
                 <td>{{ pedido.id_pedido }}</td>
-                {% if user.is_authenticated%}
                 <td>{{ pedido.cliente_solicitante }}</td>
                 <td>{{ pedido.fecha_pedido }}</td>
                 <td>{{ pedido.tiene_despacho }}</td>
-                <td>{{ pedido.estado_despacho|stringformat }}</td>
+                <td>{{ pedido.estado_despacho }}</td>
                 <td>{{ pedido.direccion_despacho }}</td>
                 <td>${{pedido.subtotal}}</td>
                 <td>${{pedido.total_pedido}}</td>
-                {#<!--<td><a class="btn btn-outline-primary" href="{% url 'edit_pedido' pedido.id_pedido %}" role="button">Editar</a></td>-->#}
-                {%endif%}
+                <td><a class="btn btn-outline-primary" href="{% url 'edit_pedido' pedido.id_pedido %}" role="button">Editar</a></td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
+          
+    
           
           <!-- Pagination -->
 
