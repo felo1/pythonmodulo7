@@ -19,10 +19,40 @@ from django.contrib.auth.models import Group, User
 import uuid
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.core.exceptions import PermissionDenied #para evitar que administrativos entren como clientes con links directos
 
 # Create your views here.
-#
+#clon de Gestionplview pa que clientes puedan ver sus pedidos
+#los mixins deben ir antes de las vistas que los requieren (classic paiton)
+class SoloStaffMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        print("User authenticated:", self.request.user.is_authenticated)
+        print("User is staff:", self.request.user.is_staff)
+        return self.request.user.is_staff
+    
+    def handle_no_permission(self):
+        messages.error(self.request, "Acceso restringido, favor usar su cuenta administrativa")
+        return redirect(reverse('login'))
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+    
+class ExcluirStaffMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        return not self.request.user.is_staff
+    
+    def handle_no_permission(self):
+        messages.error(self.request, "Página restringida para administrativos o usuarios no identificados")
+        return redirect(reverse('login'))
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+    
+#TODO: falta que el usuario pueda volver a esta vista si hace click en el logo 
 def index(request):
         usuario = request.user.id
        
@@ -92,8 +122,6 @@ def logout_view(request):
     logout(request)
     return render(request, "compraventa/logout.html")
 
-
-
 class ProductoListView(LoginRequiredMixin, ListView):
     model = Producto
     #paginate_by = 10 para usar falta implementar en template
@@ -137,31 +165,24 @@ class ProductoListView(LoginRequiredMixin, ListView):
         item_pedido.save() #guarda
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
  
-#clon de Gestionplview pa que clientes puedan ver sus pedidos
-class SoloStaffMixin(LoginRequiredMixin, UserPassesTestMixin):
 
-    def test_func(self):
-        return self.request.user.is_admin or self.request.user.is_staff
-
-
-class ClientePedidoListView(ListView):
+class ClientePedidoListView(ExcluirStaffMixin, ListView):
     model = Pedido
     paginate_by = 10
     template_name = 'compraventa/pedido_list_cliente.html'
   
-  
     #cliente_id = Cliente.objects.get(user_id=user_id)
+    #este tryexcept es necesario para evitar que la falta de cliente como parte del perfil del usuario staff crashee la  vista antes de que el mixin pueda entrar en efecto.
     def get_queryset(self):
-        queryset = super().get_queryset()
-        usuario = self.request.user.id #obtiene el usuario(no cliente)
-        print("------------------usuario:", usuario)
-        cliente = Cliente.objects.get(user_id=usuario) #busca el cliente asociado al usuario (one to one)
-        print("------------------cliente:", cliente)
-        queryset = Pedido.objects.filter(cliente_solicitante=cliente).order_by('-fecha_pedido') #queryset de clientes
-        print("------------------queryset", queryset)
-       
-        return queryset
-        #
+        try:
+            queryset = super().get_queryset()
+            usuario = self.request.user.id
+            cliente = Cliente.objects.get(user_id=usuario)
+            queryset = Pedido.objects.filter(cliente_solicitante=cliente).order_by('-fecha_pedido')
+            return queryset
+        except Cliente.DoesNotExist:
+            messages.error(self.request, "Usuario conectado no tiene un perfil de cliente asociado. ¿Está usando una cuenta administrativa?")
+            raise PermissionDenied()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -187,12 +208,10 @@ class ClientePedidoListView(ListView):
         pedido.save() #guarda
         return redirect('edit_pedido') #redirige al listview, reflejándose el cambio de inmediato.
 
-
-class GestiónPedidoListView(LoginRequiredMixin, ListView):
+class GestiónPedidoListView(SoloStaffMixin, LoginRequiredMixin, ListView):
     model = Pedido
     paginate_by = 10 #https://docs.djangoproject.com/en/4.2/topics/pagination/#paginating-a-listview
     template_name = 'compraventa/pedido_list_gestion.html'
-  
     
     def get_queryset(self): #override del método de la clase padre para obtener los queryset que necesitemos para dar la funcionalidad de filtrado
         queryset = super().get_queryset() #super() a la clase padre, para obtener el queryset inicial
@@ -242,7 +261,7 @@ class GestiónPedidoListView(LoginRequiredMixin, ListView):
         return redirect('gestion-pedidos') #redirige al listview, reflejándose el cambio de inmediato.
  
 
-class TomarPedidoListView(ListView):
+class TomarPedidoListView(SoloStaffMixin, ListView):
     model = Producto
     #paginate_by = 10 para usar falta implementar en template
  
