@@ -26,22 +26,18 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
-          {% if user.is_staff %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'pedido_manual' %}">Ingreso de pedidos</a>
-            </li>
-              <li class="nav-item">    
+          {#Esta lógica discrimina a los usuarios de staff de hacer compras pero solo ocultando el link#}
+          {% if user.is_authenticated%}
+          <li class="nav-item">    
           <a class="nav-item nav-link" href="">Usuario: {{user}}</a></li>
-          <li class="nav-item">
-          <a class="nav-item nav-link" href="{% url 'logout' %}">SALIR</a></li>
-          {% elif user.is_authenticated %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'pedido_manual_cliente' %}">Solicitud de pedidos</a>
-          </li>
-            <li class="nav-item">    
-          <a class="nav-item nav-link" href="">Usuario: {{user}}</a></li>
-          <li class="nav-item">
-          <a class="nav-item nav-link" href="{% url 'logout' %}">SALIR</a></li>
+          <li class="nav-item"><a class="nav-item nav-link" href="{% url 'logout' %}">SALIR</a></li>
+          {%endif%}
+          {% if user.is_authenticated and not user.is_staff %}
+          <li class="nav-item"><a class="nav-item nav-link" href="{% url 'productos' %}">Agregar al Carrito</a></li>
+          {%endif%}
+          {% if user.is_staff%}
+          <li class="nav-item"><a class="nav-item nav-link" href="{% url 'gestion-pedidos' %}">Gestionar Pedidos</a></li>
+          <li class="nav-item"><a class="nav-item nav-link" href="{% url 'tomar-pedido' %}">Tomar Pedido</a></li>
           {%endif%}
           {% if not user.is_authenticated %}
           <li class="nav-item">  <a class="nav-item nav-link" href="{% url 'login' %}">Ingreso</a></li>

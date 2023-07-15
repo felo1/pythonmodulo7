@@ -1,0 +1,85 @@
+  {% extends "compraventa/base.html" %}
+
+  {% block body %}
+  <div class="mt-1 ml-1">
+    <div class="row">
+      <div class="col">
+          <p>Gestión de pedidos</p>
+      </div>
+      <div class="col">
+          {% if user.is_authenticated and not user.is_staff%}
+          <button class="btn btn-primary" onclick="window.location.href='{% url 'productos' %}';">Hacer un nuevo pedido</button>
+          {%endif%}
+          {% if user.is_staff%}
+          <button class="btn btn-primary" onclick="window.location.href='{% url 'productos' %}';">Tomar un Pedido</button>
+          {%endif%}
+      </div>
+  
+    <table class="table table-striped-columns">
+        <thead>
+            <tr>
+                <th>Código</th>
+                {% if user.is_staff%}
+                <th>Cliente</th>
+                {%endif%}
+                <th>Fecha</th>
+                <th>Tiene Despacho</th>
+                <th>Estado Despacho</th>
+                <th>Dirección Despacho</th>
+                <th>Subtotal</th>
+                <th>Total</th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pedido in 'pedido' %}
+            <tr>
+                <td>{{ pedido.id_pedido }}</td>
+                {% if user.is_staff%}
+                <td>{{ pedido.cliente_solicitante }}</td>
+                {%endif%}
+                <td>{{ pedido.fecha_pedido }}</td>
+                <td>{{ pedido.tiene_despacho }}</td>
+                <td><form method="post" action="{% url 'gestion-pedidos' %}">
+                  {% csrf_token %}
+              
+                  <select name="estado_despacho" onchange="this.form.submit()">
+                    {% for choice in pedido_form.fields.estado_despacho.choices %}
+                      <option value="{{ choice.0 }}" {% if choice.0 == pedido.estado_despacho %}selected{% endif %}>
+                        {{ choice.1 }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <input type="hidden" name="id_pedido" value="{{ pedido.id_pedido }}">
+                </form></td>
+                <td>{{ pedido.direccion_despacho }}</td>
+                <td>${{pedido.subtotal}}</td>
+                <td>${{pedido.total_pedido}}</td>
+                {#<!--<td><a class="btn btn-outline-primary" href="{% url 'edit_pedido' pedido.id_pedido %}" role="button">Editar</a></td>-->#}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+
+    <div class="pagination">
+      <span class="step-links">
+          {% if page_obj.has_previous %}
+              <a href="?page=1">&laquo; Primera Página</a>
+              <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+          {% endif %}
+  
+          <span class="current">
+              Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}.
+          </span>
+  
+          {% if page_obj.has_next %}
+              <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+              <a href="?page={{ page_obj.paginator.num_pages }}">Última Página &raquo;</a>
+          {% endif %}
+      </span>
+  </div>
+</div>
+
+  {% endblock %}

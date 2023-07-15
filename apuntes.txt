@@ -1,5 +1,7 @@
 Ambiente virtual
-Activar VENV
+Activar VENV 
+( en windows: py -m venv .venv #.
+  en linux: python3 -m venv .venv #.)
 Instalar django
 Instalar psycopg2-binary y psycopg2
 git init (tipicamente se hace dentro de la carpeta raiz, pero hay casos de uso donde se opta por hacerlo afuera y que contenga la carpeta raíz del proyecto)

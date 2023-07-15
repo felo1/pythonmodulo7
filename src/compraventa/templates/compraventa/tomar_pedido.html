@@ -1,0 +1,46 @@
+{% extends "compraventa/base.html" %}
+
+{% block body %}
+<div class="mt-1 ml-1">
+    
+    <h1>PASO 1: Seleccione un cliente</h1>
+    <form method="post" action="{% url 'tomar-pedido' %}">
+        {% csrf_token %}
+        <input type="search" placeholder="Ingrese UN nombre, apellido o rut" name="búsqueda_usuario">
+        <button type="submit">Buscar</button>
+        {% if búsqueda_usuario %}
+    </b>
+</form>
+    <p>Usted buscó: {{ búsqueda_usuario }}</p>
+    {% endif %}
+
+    <table class="table table-striped-columns">
+        <thead>
+          <tr>
+            <th>RUT</th>
+            <th>Nombres</th>
+            <th>Apellidos</th>
+            <th>Seleccionar</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for cliente in encontrados %}
+            <tr>
+              <td>{{ cliente.rut }}</td>
+              <td>{{ cliente.nombres }}</td>
+              <td>{{ cliente.apellidos }}</td>
+              <td>
+                <form action="{% url 'tomar_pedido_paso2' %}" method="get">
+                  {% csrf_token %}
+                  <input type="hidden" name="id_cliente" value="{{ cliente.id }}">
+                  <button type="submit" method="get">Seleccionar</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}
