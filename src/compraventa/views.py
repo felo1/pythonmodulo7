@@ -331,7 +331,7 @@ def tomar_pedido_paso2(request):
         return render(request, 'compraventa/tomar_pedido_paso2.html', {})
     
 #@login_required
-class Tomar_pedido_paso3(ListView):
+class Tomar_pedido_paso3(SoloStaffMixin, ListView):
 
     model = Producto
     paginate_by = 10
@@ -387,7 +387,7 @@ class Tomar_pedido_paso3(ListView):
 
 
 
-class PedidoEditView(UpdateView): #Updateview es un class-based view usado para actualizar datos
+class PedidoEditView(SoloStaffMixin, UpdateView): #Updateview es un class-based view usado para actualizar datos
     model = Pedido #se elige el modelo
     form_class = PedidoForm #se elige el formulario
     template_name = "compraventa/edit_pedido.html" #se elige el template
