@@ -27,15 +27,15 @@ urlpatterns = [
     #path("hola", views.hola, name="hola"),
     path("logout", views.logout_view, name="logout"),
     path("agregar_al_carro", views.ProductoListView.as_view(), name="productos"),
-    path("pedido_list", views.GestiónPedidoListView.as_view(), name="gestion-pedidos"),
+    path("pedido_list_gestion", views.GestiónPedidoListView.as_view(), name="gestion-pedidos"),
     #cambie el login welcome para que muestre los pedidos.
     #quiero que el home sea esta vista tb cuando estás logeado pero no staff. si es staff, que envie
     #a admin
     path("pedido_list_cliente", views.ClientePedidoListView.as_view(), name="hola"),
     path("tomar_pedido", views.buscar_usuario, name="tomar-pedido"),
     path("tomar_pedido_paso2", views.tomar_pedido_paso2, name="tomar_pedido_paso2"),
-    path("tomar_pedido_paso3", views.tomar_pedido_paso3, name="tomar_pedido_paso3"),
-    path('pedidos/<int:pk>/edit/', views.PedidoEditView.as_view(), name='edit_pedido'),
+    path("tomar_pedido_paso3", views.Tomar_pedido_paso3.as_view, name="tomar_pedido_paso3"),
+    path('pedidos/<str:pk>/edit/', views.PedidoEditView.as_view(), name='edit_pedido'),
 ]
 
    # path("pedido_manual", views.pedido_manual, name = "pedido_manual"),

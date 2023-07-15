@@ -14,14 +14,14 @@
           <button class="btn btn-primary" onclick="window.location.href='{% url 'productos' %}';">Tomar un Pedido</button>
           {%endif%}
       </div>
-  
+      
+      
+    
     <table class="table table-striped-columns">
         <thead>
             <tr>
                 <th>Código</th>
-                {% if user.is_staff%}
                 <th>Cliente</th>
-                {%endif%}
                 <th>Fecha</th>
                 <th>Tiene Despacho</th>
                 <th>Estado Despacho</th>
@@ -32,36 +32,25 @@
             </tr>
         </thead>
         <tbody>
-            {% for pedido in 'pedido' %}
+            {% for pedido in object_list %}
             <tr>
                 <td>{{ pedido.id_pedido }}</td>
-                {% if user.is_staff%}
                 <td>{{ pedido.cliente_solicitante }}</td>
-                {%endif%}
                 <td>{{ pedido.fecha_pedido }}</td>
                 <td>{{ pedido.tiene_despacho }}</td>
-                <td><form method="post" action="{% url 'gestion-pedidos' %}">
-                  {% csrf_token %}
-              
-                  <select name="estado_despacho" onchange="this.form.submit()">
-                    {% for choice in pedido_form.fields.estado_despacho.choices %}
-                      <option value="{{ choice.0 }}" {% if choice.0 == pedido.estado_despacho %}selected{% endif %}>
-                        {{ choice.1 }}
-                      </option>
-                    {% endfor %}
-                  </select>
-                  <input type="hidden" name="id_pedido" value="{{ pedido.id_pedido }}">
-                </form></td>
+                <td>{{ pedido.estado_despacho }}</td>
                 <td>{{ pedido.direccion_despacho }}</td>
                 <td>${{pedido.subtotal}}</td>
                 <td>${{pedido.total_pedido}}</td>
-                {#<!--<td><a class="btn btn-outline-primary" href="{% url 'edit_pedido' pedido.id_pedido %}" role="button">Editar</a></td>-->#}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <!-- Pagination -->
+                <td><a class="btn btn-outline-primary" href="{% url 'edit_pedido' pedido.id_pedido %}" role="button">Editar</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          
+    
+          
+          <!-- Pagination -->
 
     <div class="pagination">
       <span class="step-links">
