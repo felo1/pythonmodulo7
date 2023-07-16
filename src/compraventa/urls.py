@@ -38,6 +38,9 @@ urlpatterns = [
     path("tomar_pedido_paso2", views.tomar_pedido_paso2, name="tomar_pedido_paso2"),
     path("tomar_pedido_paso3", views.Tomar_pedido_paso3.as_view(), name="tomar_pedido_paso3"),
     path('pedidos/<str:pk>/edit/', views.PedidoEditView.as_view(), name='edit_pedido'),
+    path('detalle/<int:pk>/', views.ClientePedidoEditView.as_view(), name='detalle_pedido'),
+    path('detalle/<int:pk>/cancelar_pedido/', views.CancelarPedidoView.as_view(), name='cancelar_pedido'),
+
 ]
    # path("pedido_manual", views.pedido_manual, name = "pedido_manual"),
    # path("pedido_manual_cliente", views.pedido_manual_cliente, name = "pedido_manual_cliente"),

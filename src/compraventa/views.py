@@ -1,7 +1,7 @@
 
 from django.utils import timezone
 from django.views.generic.list import ListView
-from django.views.generic import UpdateView
+from django.views.generic import UpdateView, DetailView
 from django.shortcuts import render
 from .models import Categoria, Cliente, Pedido, Producto, ItemPedido
 from .forms import RegistrarUsuarioForm, PedidoForm, ItemPedidoForm
@@ -275,7 +275,6 @@ class TomarPedidoListView(SoloStaffMixin, ListView):
     
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
         #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
-        
 
         if not request.session.session_key: #asegurarse de que exista sesión y que tenga asignada un session_key (en SOF decía que podía darse el caso)
             request.session.save()
@@ -299,7 +298,6 @@ class TomarPedidoListView(SoloStaffMixin, ListView):
             id_producto = request.POST['id_producto'] #obtiene el id_producto desde el POST
             producto = Producto.objects.get(id_producto=id_producto) #obtiene instancia del producto agregado y la asigna a 'producto'
             item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #lo mismo con item_pedido
-   
             item_pedido.save() #y guarda   
     
         item_pedido.save() #guarda
@@ -384,9 +382,6 @@ class Tomar_pedido_paso3(SoloStaffMixin, ListView):
         item_pedido.save() #guarda
         return render(request, 'compraventa/tomar_pedido_paso3.html', {})
      
-
-
-
 class PedidoEditView(SoloStaffMixin, UpdateView): #Updateview es un class-based view usado para actualizar datos
     model = Pedido #se elige el modelo
     form_class = PedidoForm #se elige el formulario
@@ -400,6 +395,24 @@ class PedidoEditView(SoloStaffMixin, UpdateView): #Updateview es un class-based 
        
         pedido.save() #se guarda
         return pedido
+    
+class ClientePedidoEditView(DetailView):
+    model = Pedido
+    template_name = "compraventa/detalle_pedido.html"
+    pk_url_kwarg = 'pk'  # Specify the keyword argument for the primary key
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add any additional context data if needed
+        return context
+
+from django.views import View
+class CancelarPedidoView(View):
+    def post(self, request, pk):
+        pedido = Pedido.objects.get(pk=pk)
+        pedido.estado_despacho = request.POST.get('estado_despacho')
+        pedido.save()
+        return HttpResponseRedirect(reverse('detalle_pedido', args=[pk]))
 """
 
 Request Method:	POST

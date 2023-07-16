@@ -50,7 +50,6 @@ class Direccion(models.Model):
 class PedidoAdmin(admin.ModelAdmin):
     list_display = ('id_pedido', 'cliente_solicitante', 'estado_despacho', 'subtotal', 'total_pedido')
 
-
 class Pedido(models.Model):
     id_pedido = models.CharField(max_length=64, primary_key=True)
     cliente_solicitante = models.ForeignKey(Cliente, on_delete=models.DO_NOTHING, default=None)
@@ -64,6 +63,8 @@ class Pedido(models.Model):
         ('Enviado', 'Enviado'),
         ('En transito', 'En transito'),
         ('Entregado', 'Entregado'),
+        ('Cancelacion solicitada', 'Cancelacion solicitada'),
+        ('Cancelado', 'Cancelado'),
     ]
     estado_despacho = models.CharField(max_length=30, choices=ESTADO_CHOICES, default="Recibido", null=True)
     direccion_despacho = models.ForeignKey(Direccion, on_delete=models.DO_NOTHING, null=True)
