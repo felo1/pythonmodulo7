@@ -20,7 +20,7 @@ from django.views.generic.base import RedirectView
 from . import views 
 
 urlpatterns = [
-    path("", views.index, name = "index"),
+    path("", views.ClientePedidoListView.as_view(), name = "index"),
     path("registro", views.registrar_usuario, name='registro'),
     path("login", views.login_view, name='login'),
     path("login/", RedirectView.as_view(pattern_name='login', permanent=True)),
