@@ -14,8 +14,6 @@
           <button class="btn btn-primary" onclick="window.location.href='{% url 'productos' %}';">Tomar un Pedido</button>
           {%endif%}
       </div>
-      
-      
     
     <table class="table table-striped-columns">
         <thead>
@@ -42,7 +40,7 @@
                 <td>{{ pedido.direccion_despacho }}</td>
                 <td>${{pedido.subtotal}}</td>
                 <td>${{pedido.total_pedido}}</td>
-                <td><a class="btn btn-outline-primary" href="{% url 'edit_pedido' pedido.id_pedido %}" role="button">Editar</a></td>
+                <td><a class="btn btn-outline-primary" href="{% url 'detalle_pedido' pedido.id_pedido %}" role="button">Ver detalles</a></td>
               </tr>
               {% endfor %}
             </tbody>
