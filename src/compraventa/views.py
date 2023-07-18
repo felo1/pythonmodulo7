@@ -261,7 +261,7 @@ class GestiónPedidoListView(SoloStaffMixin, LoginRequiredMixin, ListView):
         return redirect('gestion-pedidos') #redirige al listview, reflejándose el cambio de inmediato.
  
 
-class TomarPedidoListView(SoloStaffMixin, ListView):
+class TomarPedidoListView(ListView): #LE SAQUÉ SOLOSTAFFMIXIN
     model = Producto
     #paginate_by = 10 para usar falta implementar en template
  
@@ -329,7 +329,7 @@ def tomar_pedido_paso2(request):
         return render(request, 'compraventa/tomar_pedido_paso2.html', {})
     
 #@login_required
-class Tomar_pedido_paso3(SoloStaffMixin, ListView):
+class Tomar_pedido_paso3(ListView): #le saqué temporalemente solostaffmixin
 
     model = Producto
     paginate_by = 10
@@ -350,6 +350,8 @@ class Tomar_pedido_paso3(SoloStaffMixin, ListView):
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
         pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
         itempedido_form = ItemPedidoForm() #formulario vacío
+        print("-------------------context: ", context)
+        cliente_actual = self.request.GET.get('cliente_elegido')
         objeto_cliente_actual = Cliente.objects.get(id=cliente_actual) #como cliente_actual es solo el número, se crea esto para obtener otros datos, como nombres
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
@@ -361,7 +363,7 @@ class Tomar_pedido_paso3(SoloStaffMixin, ListView):
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
         #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
         
-    
+        
         pedido = Pedido.objects.filter(id_pedido=id_pedido_actual).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
         # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
 
@@ -379,7 +381,10 @@ class Tomar_pedido_paso3(SoloStaffMixin, ListView):
             
             item_pedido.save() #y guarda   
             return render(request, 'compraventa/tomar_pedido_paso3.html', context=context)
-        item_pedido.save() #guarda
+        if 'id_pedido_ok' in request.POST:
+            return render(request, 'compraventa/tomar_pedido_paso4.html', {'id_pedido': request.POST['id_pedido_ok']})
+        
+        #item_pedido.save() #guarda
         return render(request, 'compraventa/tomar_pedido_paso3.html', {})
      
 class PedidoEditView(SoloStaffMixin, UpdateView): #Updateview es un class-based view usado para actualizar datos
@@ -388,7 +393,7 @@ class PedidoEditView(SoloStaffMixin, UpdateView): #Updateview es un class-based 
     template_name = "compraventa/edit_pedido.html" #se elige el template
 
     def get_success_url(self): #override del metodo que la clase usa al completar exitosamente la edición. En este paso redirige al list-view
-        return reverse('pedido_list')
+        return reverse('gestion-pedidos')
 
     def get_object(self, queryset=None): #override del método de la clase padre.
         pedido = super().get_object(queryset) #obtiene el objeto tarea y lo asigna a esta variable
@@ -413,6 +418,49 @@ class CancelarPedidoView(View):
         pedido.estado_despacho = request.POST.get('estado_despacho')
         pedido.save()
         return HttpResponseRedirect(reverse('detalle_pedido', args=[pk]))
+    
+
+class TomarPedidoPaso4View(ListView):
+    template_name = 'compraventa/tomar_pedido_paso4.html'
+    context_object_name = 'pedidos'
+   
+    
+    def get_queryset(self):
+
+        self.id_pedido = self.request.GET.get('id_pedido')
+        print("id_pedido---------:", self.id_pedido)
+        queryset = ItemPedido.objects.filter(pedido_id = self.id_pedido)
+        """
+        try:
+            pedido = Pedido.objects.get(id_pedido=id_pedido)
+            itempedidos = ItemPedido.objects.filter(pedido_id =)
+        except Pedido.DoesNotExist:
+            # Handle the case when the pedido doesn't exist
+            pedido = None
+            productos = []
+        """
+            
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print("self get", self.get)
+        id_pedido = self.id_pedido
+        try:
+            pedido = Pedido.objects.get(id_pedido=id_pedido)
+        except Pedido.DoesNotExist:
+            pedido = None
+        context['productos'] = ItemPedido.objects.filter(pedido_id=id_pedido)
+        context['pedido'] = pedido
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        if 'id_pedido_ok' in request.POST:
+            id_pedido = request.POST['id_pedido_ok'] #obtiene el id del pedido ya terminado
+            return render(request, 'compraventa/tomar_pedido_paso4.html', {'id_pedido' : id_pedido})
+
+
+
 """
 
 Request Method:	POST

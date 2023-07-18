@@ -1,0 +1,60 @@
+{% extends "compraventa/base.html" %}
+
+{% block body %}
+<div class= "mt-1 ml-1">
+
+<h1> Visualización del pedido {{pedido.id_pedido}}</h1>
+<table class="table table-striped-columns">
+<thead>
+    <tr>
+        <td>Código</td>
+        <td>Cliente</td>
+        <td>Fecha</td>
+        <td>Tiene Despacho</td>
+        <td>Dirección</td>
+        <td>Subtotal</td>
+        <td>Total</td>
+        <td>Editar</td>
+    </tr>
+</thead>
+    <tbody>
+        <tr>
+            <td> {{pedido.id_pedido}}</td>
+            <td> {{pedido.cliente_solicitante}}</td>
+            <td> {{pedido.fecha_pedido}}</td>
+            <td> {{pedido.tiene_despacho}}</td>
+            <td> {{pedido.direccion_despacho}}</td>
+            <td> ${{pedido.subtotal}}</td>
+            <td> ${{pedido.total_pedido}}</td>
+            <td> <a class="btn btn-outline-primary" href="{% url 'edit_pedido' pedido.id_pedido %}" role="button">Editar</a></td>
+
+        </tr>
+    </tbody>
+</table>
+
+<table class="table table-striped-columns">
+    <thead>
+        <tr>
+            <td>Producto</td>
+            <td>Cantidad</td>
+        
+        </tr>
+    </thead>
+        <tbody>
+            {%for producto in productos%}
+            <tr>
+                <td> {{producto.producto_id}}</td>
+                <td> {{producto.cantidad}}</td>
+                
+    
+            </tr>
+            {%endfor%}
+        </tbody>
+    </table>
+<button class ='btn-success'> Pagar </button>
+    
+
+
+</div>
+
+{% endblock %}

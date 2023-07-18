@@ -40,8 +40,14 @@
           {% endfor %}
         </tbody>
       </table>
-
-      <button>Ir al Carrito (Pendiente)</button>
+      <form action="{% url 'tomar_pedido_paso4' %}"method="get">
+        {% csrf_token %}
+        
+        <input type="hidden" name="id_pedido" value="{{ id_pedido}}">
+        
+        <button type="submit">Ir al Carrito</button>
+    </form>
+      
 
 </div>
 
