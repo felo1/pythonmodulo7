@@ -2,7 +2,7 @@
 
 {% block body %}
 <div class= "mt-1 ml-1">
-    <h1>Productos</h1>
+    <h1>Pedido {{id_pedido}}</h1>
     <table class="table table-striped-columns">
         <thead>
           <tr>
@@ -32,8 +32,21 @@
           {% endfor %}
         </tbody>
       </table>
+
+      <p>id cliente{{ id_cliente_pedido}}<p>
+        {%for object in object_list%}
+
+        <p>{{object}}</p>
+        {%endfor%}
       
-    
+      <form action="{% url 'tomar_pedido_paso4' %}"method="get">
+        {% csrf_token %}
+        
+        <input type="hidden" name="id_pedido" value={{ id_pedido}}>
+        
+        <button type="submit">Ir al Carrito</button>
+    </form>
+      
  
 
 

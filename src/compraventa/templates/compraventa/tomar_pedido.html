@@ -1,8 +1,10 @@
 {% extends "compraventa/base.html" %}
 
 {% block body %}
+
 <div class="mt-1 ml-1">
-    
+  
+  
     <h1>PASO 1: Seleccione un cliente</h1>
     <form method="post" action="{% url 'tomar-pedido' %}">
         {% csrf_token %}

@@ -54,7 +54,7 @@ class Pedido(models.Model):
     id_pedido = models.CharField(max_length=64, primary_key=True)
     cliente_solicitante = models.ForeignKey(Cliente, on_delete=models.DO_NOTHING, default=None)
     fecha_pedido = models.DateTimeField(auto_now=True, null=True)
-    tiene_despacho = models.BooleanField(null=True)
+    tiene_despacho = models.BooleanField(default=True)
     ESTADO_CHOICES = [
         ('Recibido', 'Recibido'),
         ('Pago aceptado', 'Pago aceptado'),

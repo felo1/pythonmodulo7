@@ -122,7 +122,7 @@ def logout_view(request):
     logout(request)
     return render(request, "compraventa/logout.html")
 
-class ProductoListView(LoginRequiredMixin, ListView):
+class ProductoListView(LoginRequiredMixin, ListView): #endpoint agregar al carrito, lado usuario común
     model = Producto
     #paginate_by = 10 para usar falta implementar en template
  
@@ -132,6 +132,9 @@ class ProductoListView(LoginRequiredMixin, ListView):
         itempedido_form = ItemPedidoForm() #formulario vacío
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
+        
+        #context['id_cliente'] = self.cliente_id
+        #print("-------------id_cliente", context['id_cliente'])
         return context #lista de contextos final   
     
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
@@ -143,15 +146,15 @@ class ProductoListView(LoginRequiredMixin, ListView):
       
         user_id = request.user.id #id de usuario logueado
        
-        cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
+        self.cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
         #relación 1 a 1 con un usuario.
 
         pedido = Pedido.objects.filter(id_pedido=session_id).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
         # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
 
         if not pedido: #si no hay un pedido
-            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=cliente_id) #crea uno
-        pedido = Pedido.objects.get(cliente_solicitante=cliente_id, id_pedido=session_id) #finalmente, asigna un objeto Pedido a la variable pedido
+            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=self.cliente_id) #crea uno
+        pedido = Pedido.objects.get(cliente_solicitante=self.cliente_id, id_pedido=session_id) #finalmente, asigna un objeto Pedido a la variable pedido
 
         if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
          
@@ -265,12 +268,26 @@ class TomarPedidoListView(ListView): #LE SAQUÉ SOLOSTAFFMIXIN
     model = Producto
     #paginate_by = 10 para usar falta implementar en template
  
+    def get_queryset(self):
+    
+        self.id_pedido_actual = self.request.GET.get('id_pedido')
+        self.cliente_actual = self.request.GET.get('cliente_elegido')
+        self.queryset['id_pedido'] = self.id_pedido_actual
+        self.queryset['cliente_elegido'] = self.cliente_actual
+        print("queryset-------------------------", self.queryset)
+
+        return self.queryset
+    
     def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
         pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
         itempedido_form = ItemPedidoForm() #formulario vacío
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
+        print("session id-----------------", self.session.user.id)
+        cliente_actual = Cliente.objects.get(user_id = self.session.user.id)
+        context['id_cliente_pedido'] = cliente_actual
+        print("context-------------------", context)
         return context #lista de contextos final   
     
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
@@ -324,7 +341,7 @@ def tomar_pedido_paso2(request):
         uuid_pedido = uuid.uuid1() #se genera un uuid, que si se confirma la creación de un pedido se asignará posteriormente
         #como id_pedido y se entregará en el GET al tomar_pedido_paso3
         return render(request, 'compraventa/tomar_pedido_paso2.html', {'cliente_elegido':cliente_elegido, 'uuid_pedido':uuid_pedido})
-    
+
     else:
         return render(request, 'compraventa/tomar_pedido_paso2.html', {})
     
@@ -387,7 +404,7 @@ class Tomar_pedido_paso3(ListView): #le saqué temporalemente solostaffmixin
         #item_pedido.save() #guarda
         return render(request, 'compraventa/tomar_pedido_paso3.html', {})
      
-class PedidoEditView(SoloStaffMixin, UpdateView): #Updateview es un class-based view usado para actualizar datos
+class PedidoEditView( UpdateView): #Updateview es un class-based view usado para actualizar datos #solostaffmixin se sacó
     model = Pedido #se elige el modelo
     form_class = PedidoForm #se elige el formulario
     template_name = "compraventa/edit_pedido.html" #se elige el template
@@ -396,7 +413,7 @@ class PedidoEditView(SoloStaffMixin, UpdateView): #Updateview es un class-based 
         return reverse('gestion-pedidos')
 
     def get_object(self, queryset=None): #override del método de la clase padre.
-        pedido = super().get_object(queryset) #obtiene el objeto tarea y lo asigna a esta variable
+        pedido = super().get_object(queryset) #obtiene el objeto pedido y lo asigna a esta variable
        
         pedido.save() #se guarda
         return pedido
