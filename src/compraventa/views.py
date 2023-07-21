@@ -132,10 +132,9 @@ class ProductoListView(LoginRequiredMixin, ListView): #endpoint agregar al carri
         itempedido_form = ItemPedidoForm() #formulario vacío
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
-        
-        #context['id_cliente'] = self.cliente_id
-        #print("-------------id_cliente", context['id_cliente'])
-        return context #lista de contextos final   
+        context['cliente_id']  = Cliente.objects.get(user_id=self.request.user.id)
+        print(context['cliente_id'].id)
+        return context #lista de contextos final
     
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
         #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.

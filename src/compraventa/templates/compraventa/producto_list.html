@@ -27,9 +27,16 @@
                 <button type="submit">Agregar</button>
             </form>
             
+            
                 </td>
           </tr>
           {% endfor %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id_pedido" value="{{ id_pedido }}">
+            <label>Cliente: {{cliente_id}}</label>"
+            <button type="submit">Ir al carrito</button>
+        </form>
         </tbody>
       </table>
 
