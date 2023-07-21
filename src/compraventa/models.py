@@ -24,6 +24,7 @@ class Producto(models.Model):
     categoria = models.ForeignKey(Categoria, on_delete=models.DO_NOTHING, default=None)
     #impuesto = models.FloatField(default=19, verbose_name="IVA")
     descuento = models.FloatField(default=0) # descuento base + descuentos circunstanciales
+    foto = models.ImageField(null = True)
 
     def __str__(self):
         return 'sku: ' + str(self.id_producto) + ' | ' + self.nombre
@@ -103,7 +104,6 @@ class ItemPedido(models.Model):
     cantidad = models.IntegerField(default=1)
 
     # Other fields and methods for the ItemPedido model
-
 
 
 

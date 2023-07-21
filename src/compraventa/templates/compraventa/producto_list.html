@@ -6,6 +6,7 @@
     <table class="table table-striped-columns">
         <thead>
           <tr>
+            <th>Foto</th>
             <th>Producto</th>
             <th>Modelo</th>
             <th>Descripción</th>
@@ -16,6 +17,7 @@
         <tbody>
           {% for producto in object_list %}
           <tr>
+            <td><img src="{{ producto.foto.url }}" ></td>
             <td>{{ producto.nombre }}</td>
             <td>{{ producto.modelo }}</td>
             <td>{{ producto.descripcion }}</td>
@@ -46,7 +48,7 @@
         <p>{{object}}</p>
         {%endfor%}
       
-      <form action="{% url 'tomar_pedido_paso4' %}"method="get">
+      <form action="{% url 'tomar_pedido_paso4' %}"method="post">
         {% csrf_token %}
         
         <input type="hidden" name="id_pedido" value={{ id_pedido}}>

@@ -133,7 +133,9 @@ class ProductoListView(LoginRequiredMixin, ListView): #endpoint agregar al carri
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
         context['cliente_id']  = Cliente.objects.get(user_id=self.request.user.id)
-        print(context['cliente_id'].id)
+        context['id_pedido'] = self.request.session.session_key #session key es el nro de pedido en los pedidos realizados por el cliente
+        
+       
         return context #lista de contextos final
     
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
@@ -149,20 +151,24 @@ class ProductoListView(LoginRequiredMixin, ListView): #endpoint agregar al carri
         #relación 1 a 1 con un usuario.
 
         pedido = Pedido.objects.filter(id_pedido=session_id).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
+        
         # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
-
+        print("pedido exists", pedido)
+        print("id pedido dentro de post---------------", Pedido.objects.get(id_pedido=session_id))
         if not pedido: #si no hay un pedido
             Pedido.objects.create(id_pedido=session_id, cliente_solicitante=self.cliente_id) #crea uno
         pedido = Pedido.objects.get(cliente_solicitante=self.cliente_id, id_pedido=session_id) #finalmente, asigna un objeto Pedido a la variable pedido
-
         if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
          
+            self.contexto_pedido = pedido
             cantidad = request.POST['cantidad'] #obtiene la cantidad desde el POST
             id_producto = request.POST['id_producto'] #obtiene el id_producto desde el POST
             producto = Producto.objects.get(id_producto=id_producto) #obtiene instancia del producto agregado y la asigna a 'producto'
             item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #lo mismo con item_pedido
-   
-            item_pedido.save() #y guarda   
+            
+            item_pedido.save() #y guarda
+        
+            
     
         item_pedido.save() #guarda
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
@@ -198,7 +204,7 @@ class ClientePedidoListView(ExcluirStaffMixin, ListView):
         #for item in pedido_list:
         #context["pedidos"] = item
 
-        #print("--------------------context:", context)
+        print("--------------------context:", context)
         return context
 
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
@@ -252,8 +258,8 @@ class GestiónPedidoListView(SoloStaffMixin, LoginRequiredMixin, ListView):
 
       
         if 'estado_despacho' in request.POST: #si en el POST viene un campo 'estado_despacho':
-            id_pedido = request.POST.get('pedido') #asigna el id_pedido que viene en el post a una variable
-            pedido = Producto.objects.get(id_pedido=id_pedido) #obtiene instancia del pedido a modificar y la asigna a 'pedido'
+            id_pedido = request.POST.get('id_pedido') #asigna el id_pedido que viene en el post a una variable
+            pedido = Pedido.objects.get(id_pedido=id_pedido) #obtiene instancia del pedido a modificar y la asigna a 'pedido'
             pedido.id_pedido = request.POST['id_pedido'] #obtiene el id_pedido desde el POST y le hace un update
          
         else:
