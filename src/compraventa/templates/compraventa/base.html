@@ -33,7 +33,8 @@
           <li class="nav-item"><a class="nav-item nav-link" href="{% url 'logout' %}">SALIR</a></li>
           {%endif%}
           {% if user.is_authenticated and not user.is_staff %}
-          <li class="nav-item"><a class="nav-item nav-link" href="{% url 'productos' %}">Agregar al Carrito</a></li>
+          <li class="nav-item"><a class="nav-item nav-link" href="{% url 'productos'  %}">Agregar al Carrito</a></li>
+          <li class="nav-item"><a class="nav-item nav-link" href="{% url 'index' %}">Mis pedidos</a></li>
           {%endif%}
           {% if user.is_staff%}
           <li class="nav-item"><a class="nav-item nav-link" href="{% url 'gestion-pedidos' %}">Gestionar Pedidos</a></li>

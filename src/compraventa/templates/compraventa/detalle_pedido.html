@@ -1,0 +1,21 @@
+{% extends "compraventa/base.html" %}
+
+{% block body %}
+
+<!-- detalle_pedido.html -->
+<h1>Detalles del pedido N° {{ pedido.id_pedido }}</h1>
+<p>Fecha de Pedido: {{ pedido.fecha_pedido }}</p>
+<p>Estado de Despacho: {{ pedido.estado_despacho }}</p>
+<p>Dirección de Despacho: {{ pedido.direccion_despacho }}</p>
+
+{% if pedido.estado_despacho in "Recibido,Pago aceptado,Orden de compra generada,En proceso" %}
+<form action="{% url 'cancelar_pedido' pedido.id_pedido %}" method="POST">
+  {% csrf_token %}
+  <input type="hidden" name="estado_despacho" value="Cancelación solicitada">
+  <button class="btn btn-danger" type="submit">Cancelar Pedido</button>
+</form>
+{% else %}
+    <p>El pedido no puede ser cancelado en esta etapa.</p>
+{% endif %}
+
+{% endblock %}

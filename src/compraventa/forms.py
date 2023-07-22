@@ -6,15 +6,14 @@ from django.forms import modelform_factory
 
 PedidoForm = modelform_factory(Pedido, fields=['cliente_solicitante', 'estado_despacho', 'direccion_despacho']) #tiene_despacho tira error
 
+DetallePedidoForm = modelform_factory(Pedido, fields=['estado_despacho','direccion_despacho'])
+
 ItemPedidoForm = modelform_factory(ItemPedido, fields=['producto', 'cantidad'])
-
-
 
 class ingreso_clientes(forms.ModelForm):
    class Meta:
         model = Cliente
         fields = '__all__' 
-
         
 class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario usercreationform
 
@@ -28,13 +27,6 @@ class RegistrarUsuarioForm(UserCreationForm): # hereda del formulario usercreati
     class Meta:
         model = User
         fields = UserCreationForm.Meta.fields + ('rut', 'nombres', 'apellidos', 'email', 'telefono_movil', 'telefono_fijo', 'notas')
-
-
-
-
-
-
-
 """
 
 

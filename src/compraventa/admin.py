@@ -12,6 +12,7 @@ admin.site.register(Categoria)
 admin.site.register(Direccion)
 admin.site.register(ItemPedido)
 admin.site.register(Pedido, PedidoAdmin) #agregado así para poder agregar la modificacion al admin, deben ir juntos.
+
  
 #entonces, se crea un modelo 'inline', que permite que se puedan editar campos en el admin
 #copio y pego lo indicado en la documentación, adaptado por supuesto.

@@ -24,6 +24,7 @@ class Producto(models.Model):
     categoria = models.ForeignKey(Categoria, on_delete=models.DO_NOTHING, default=None)
     #impuesto = models.FloatField(default=19, verbose_name="IVA")
     descuento = models.FloatField(default=0) # descuento base + descuentos circunstanciales
+    foto = models.ImageField(null = True)
 
     def __str__(self):
         return 'sku: ' + str(self.id_producto) + ' | ' + self.nombre
@@ -50,12 +51,11 @@ class Direccion(models.Model):
 class PedidoAdmin(admin.ModelAdmin):
     list_display = ('id_pedido', 'cliente_solicitante', 'estado_despacho', 'subtotal', 'total_pedido')
 
-
 class Pedido(models.Model):
     id_pedido = models.CharField(max_length=64, primary_key=True)
     cliente_solicitante = models.ForeignKey(Cliente, on_delete=models.DO_NOTHING, default=None)
     fecha_pedido = models.DateTimeField(auto_now=True, null=True)
-    tiene_despacho = models.BooleanField(null=True)
+    tiene_despacho = models.BooleanField(default=True)
     ESTADO_CHOICES = [
         ('Recibido', 'Recibido'),
         ('Pago aceptado', 'Pago aceptado'),
@@ -64,6 +64,8 @@ class Pedido(models.Model):
         ('Enviado', 'Enviado'),
         ('En transito', 'En transito'),
         ('Entregado', 'Entregado'),
+        ('Cancelacion solicitada', 'Cancelacion solicitada'),
+        ('Cancelado', 'Cancelado'),
     ]
     estado_despacho = models.CharField(max_length=30, choices=ESTADO_CHOICES, default="Recibido", null=True)
     direccion_despacho = models.ForeignKey(Direccion, on_delete=models.DO_NOTHING, null=True)
@@ -102,7 +104,6 @@ class ItemPedido(models.Model):
     cantidad = models.IntegerField(default=1)
 
     # Other fields and methods for the ItemPedido model
-
 
 
 

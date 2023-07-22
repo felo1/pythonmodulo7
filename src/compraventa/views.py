@@ -1,7 +1,7 @@
 
 from django.utils import timezone
 from django.views.generic.list import ListView
-from django.views.generic import UpdateView
+from django.views.generic import UpdateView, DetailView
 from django.shortcuts import render
 from .models import Categoria, Cliente, Pedido, Producto, ItemPedido
 from .forms import RegistrarUsuarioForm, PedidoForm, ItemPedidoForm
@@ -19,10 +19,40 @@ from django.contrib.auth.models import Group, User
 import uuid
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.core.exceptions import PermissionDenied #para evitar que administrativos entren como clientes con links directos
 
 # Create your views here.
-#
+#clon de Gestionplview pa que clientes puedan ver sus pedidos
+#los mixins deben ir antes de las vistas que los requieren (classic paiton)
+class SoloStaffMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        print("User authenticated:", self.request.user.is_authenticated)
+        print("User is staff:", self.request.user.is_staff)
+        return self.request.user.is_staff
+    
+    def handle_no_permission(self):
+        messages.error(self.request, "Acceso restringido, favor usar su cuenta administrativa")
+        return redirect(reverse('login'))
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+    
+class ExcluirStaffMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        return not self.request.user.is_staff
+    
+    def handle_no_permission(self):
+        messages.error(self.request, "Página restringida para administrativos o usuarios no identificados")
+        return redirect(reverse('login'))
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not self.test_func():
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+    
+#TODO: falta que el usuario pueda volver a esta vista si hace click en el logo 
 def index(request):
         usuario = request.user.id
        
@@ -92,9 +122,7 @@ def logout_view(request):
     logout(request)
     return render(request, "compraventa/logout.html")
 
-
-
-class ProductoListView(LoginRequiredMixin, ListView):
+class ProductoListView(LoginRequiredMixin, ListView): #endpoint agregar al carrito, lado usuario común
     model = Producto
     #paginate_by = 10 para usar falta implementar en template
  
@@ -104,7 +132,11 @@ class ProductoListView(LoginRequiredMixin, ListView):
         itempedido_form = ItemPedidoForm() #formulario vacío
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
-        return context #lista de contextos final   
+        context['cliente_id']  = Cliente.objects.get(user_id=self.request.user.id)
+        context['id_pedido'] = self.request.session.session_key #session key es el nro de pedido en los pedidos realizados por el cliente
+        
+       
+        return context #lista de contextos final
     
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
         #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
@@ -115,53 +147,50 @@ class ProductoListView(LoginRequiredMixin, ListView):
       
         user_id = request.user.id #id de usuario logueado
        
-        cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
+        self.cliente_id = Cliente.objects.get(user_id=user_id) #obtiene el cliente a partir del usuario, recordar que cliente tiene
         #relación 1 a 1 con un usuario.
 
         pedido = Pedido.objects.filter(id_pedido=session_id).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
+        
         # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
-
+        print("pedido exists", pedido)
+        print("id pedido dentro de post---------------", Pedido.objects.get(id_pedido=session_id))
         if not pedido: #si no hay un pedido
-            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=cliente_id) #crea uno
-        pedido = Pedido.objects.get(cliente_solicitante=cliente_id, id_pedido=session_id) #finalmente, asigna un objeto Pedido a la variable pedido
-
+            Pedido.objects.create(id_pedido=session_id, cliente_solicitante=self.cliente_id) #crea uno
+        pedido = Pedido.objects.get(cliente_solicitante=self.cliente_id, id_pedido=session_id) #finalmente, asigna un objeto Pedido a la variable pedido
         if 'cantidad' in request.POST: #si en el POST viene un campo 'cantidad':
          
+            self.contexto_pedido = pedido
             cantidad = request.POST['cantidad'] #obtiene la cantidad desde el POST
             id_producto = request.POST['id_producto'] #obtiene el id_producto desde el POST
             producto = Producto.objects.get(id_producto=id_producto) #obtiene instancia del producto agregado y la asigna a 'producto'
             item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #lo mismo con item_pedido
-   
-            item_pedido.save() #y guarda   
+            
+            item_pedido.save() #y guarda
+        
+            
     
         item_pedido.save() #guarda
         return redirect('productos') #redirige al listview, reflejándose el cambio de inmediato.
  
-#clon de Gestionplview pa que clientes puedan ver sus pedidos
-class SoloStaffMixin(LoginRequiredMixin, UserPassesTestMixin):
 
-    def test_func(self):
-        return self.request.user.is_admin or self.request.user.is_staff
-
-
-class ClientePedidoListView(ListView):
+class ClientePedidoListView(ExcluirStaffMixin, ListView):
     model = Pedido
     paginate_by = 10
     template_name = 'compraventa/pedido_list_cliente.html'
   
-  
     #cliente_id = Cliente.objects.get(user_id=user_id)
+    #este tryexcept es necesario para evitar que la falta de cliente como parte del perfil del usuario staff crashee la  vista antes de que el mixin pueda entrar en efecto.
     def get_queryset(self):
-        queryset = super().get_queryset()
-        usuario = self.request.user.id #obtiene el usuario(no cliente)
-        print("------------------usuario:", usuario)
-        cliente = Cliente.objects.get(user_id=usuario) #busca el cliente asociado al usuario (one to one)
-        print("------------------cliente:", cliente)
-        queryset = Pedido.objects.filter(cliente_solicitante=cliente).order_by('-fecha_pedido') #queryset de clientes
-        print("------------------queryset", queryset)
-       
-        return queryset
-        #
+        try:
+            queryset = super().get_queryset()
+            usuario = self.request.user.id
+            cliente = Cliente.objects.get(user_id=usuario)
+            queryset = Pedido.objects.filter(cliente_solicitante=cliente).order_by('-fecha_pedido')
+            return queryset
+        except Cliente.DoesNotExist:
+            messages.error(self.request, "Usuario conectado no tiene un perfil de cliente asociado. ¿Está usando una cuenta administrativa?")
+            raise PermissionDenied()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -175,7 +204,7 @@ class ClientePedidoListView(ListView):
         #for item in pedido_list:
         #context["pedidos"] = item
 
-        #print("--------------------context:", context)
+        print("--------------------context:", context)
         return context
 
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
@@ -187,12 +216,10 @@ class ClientePedidoListView(ListView):
         pedido.save() #guarda
         return redirect('edit_pedido') #redirige al listview, reflejándose el cambio de inmediato.
 
-
-class GestiónPedidoListView(LoginRequiredMixin, ListView):
+class GestiónPedidoListView(SoloStaffMixin, LoginRequiredMixin, ListView):
     model = Pedido
     paginate_by = 10 #https://docs.djangoproject.com/en/4.2/topics/pagination/#paginating-a-listview
     template_name = 'compraventa/pedido_list_gestion.html'
-  
     
     def get_queryset(self): #override del método de la clase padre para obtener los queryset que necesitemos para dar la funcionalidad de filtrado
         queryset = super().get_queryset() #super() a la clase padre, para obtener el queryset inicial
@@ -231,8 +258,8 @@ class GestiónPedidoListView(LoginRequiredMixin, ListView):
 
       
         if 'estado_despacho' in request.POST: #si en el POST viene un campo 'estado_despacho':
-            id_pedido = request.POST.get('pedido') #asigna el id_pedido que viene en el post a una variable
-            pedido = Producto.objects.get(id_pedido=id_pedido) #obtiene instancia del pedido a modificar y la asigna a 'pedido'
+            id_pedido = request.POST.get('id_pedido') #asigna el id_pedido que viene en el post a una variable
+            pedido = Pedido.objects.get(id_pedido=id_pedido) #obtiene instancia del pedido a modificar y la asigna a 'pedido'
             pedido.id_pedido = request.POST['id_pedido'] #obtiene el id_pedido desde el POST y le hace un update
          
         else:
@@ -242,21 +269,34 @@ class GestiónPedidoListView(LoginRequiredMixin, ListView):
         return redirect('gestion-pedidos') #redirige al listview, reflejándose el cambio de inmediato.
  
 
-class TomarPedidoListView(ListView):
+class TomarPedidoListView(ListView): #LE SAQUÉ SOLOSTAFFMIXIN
     model = Producto
     #paginate_by = 10 para usar falta implementar en template
  
+    def get_queryset(self):
+    
+        self.id_pedido_actual = self.request.GET.get('id_pedido')
+        self.cliente_actual = self.request.GET.get('cliente_elegido')
+        self.queryset['id_pedido'] = self.id_pedido_actual
+        self.queryset['cliente_elegido'] = self.cliente_actual
+        print("queryset-------------------------", self.queryset)
+
+        return self.queryset
+    
     def get_context_data(self, **kwargs): #override del método de la clase padre, que es un generador de contexto para pasarlo al template
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
         pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
         itempedido_form = ItemPedidoForm() #formulario vacío
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
+        print("session id-----------------", self.session.user.id)
+        cliente_actual = Cliente.objects.get(user_id = self.session.user.id)
+        context['id_cliente_pedido'] = cliente_actual
+        print("context-------------------", context)
         return context #lista de contextos final   
     
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
         #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
-        
 
         if not request.session.session_key: #asegurarse de que exista sesión y que tenga asignada un session_key (en SOF decía que podía darse el caso)
             request.session.save()
@@ -280,7 +320,6 @@ class TomarPedidoListView(ListView):
             id_producto = request.POST['id_producto'] #obtiene el id_producto desde el POST
             producto = Producto.objects.get(id_producto=id_producto) #obtiene instancia del producto agregado y la asigna a 'producto'
             item_pedido = ItemPedido.objects.create(cantidad=cantidad, pedido=pedido, producto=producto) #lo mismo con item_pedido
-   
             item_pedido.save() #y guarda   
     
         item_pedido.save() #guarda
@@ -307,12 +346,12 @@ def tomar_pedido_paso2(request):
         uuid_pedido = uuid.uuid1() #se genera un uuid, que si se confirma la creación de un pedido se asignará posteriormente
         #como id_pedido y se entregará en el GET al tomar_pedido_paso3
         return render(request, 'compraventa/tomar_pedido_paso2.html', {'cliente_elegido':cliente_elegido, 'uuid_pedido':uuid_pedido})
-    
+
     else:
         return render(request, 'compraventa/tomar_pedido_paso2.html', {})
     
 #@login_required
-class Tomar_pedido_paso3(ListView):
+class Tomar_pedido_paso3(ListView): #le saqué temporalemente solostaffmixin
 
     model = Producto
     paginate_by = 10
@@ -333,6 +372,8 @@ class Tomar_pedido_paso3(ListView):
         context = super().get_context_data(**kwargs) #llama al método de la clase padre ListView usando super()
         pedido_form = PedidoForm() #se instancia un formulario PedidoForm vacío
         itempedido_form = ItemPedidoForm() #formulario vacío
+        print("-------------------context: ", context)
+        cliente_actual = self.request.GET.get('cliente_elegido')
         objeto_cliente_actual = Cliente.objects.get(id=cliente_actual) #como cliente_actual es solo el número, se crea esto para obtener otros datos, como nombres
         context['pedido_form'] = pedido_form #se agrega pedido_form a la lista de contextos
         context['itempedido_form'] = itempedido_form #y el otro form
@@ -344,7 +385,7 @@ class Tomar_pedido_paso3(ListView):
     def post(self, request, *args, **kwargs): #override de post de la clase padre (ListView).
         #este método utiliza condiciones lógicas sobre el contenido del POST, para decidir qué se hace con la información.
         
-    
+        
         pedido = Pedido.objects.filter(id_pedido=id_pedido_actual).exists() #devuelve True si existe un pedido con un id_pedido = session_key,
         # el que podría existir si es que ya se generó instancias de ItemPedido al haber agregado itemes al carrito
 
@@ -362,25 +403,86 @@ class Tomar_pedido_paso3(ListView):
             
             item_pedido.save() #y guarda   
             return render(request, 'compraventa/tomar_pedido_paso3.html', context=context)
-        item_pedido.save() #guarda
+        if 'id_pedido_ok' in request.POST:
+            return render(request, 'compraventa/tomar_pedido_paso4.html', {'id_pedido': request.POST['id_pedido_ok']})
+        
+        #item_pedido.save() #guarda
         return render(request, 'compraventa/tomar_pedido_paso3.html', {})
      
-
-
-
-class PedidoEditView(UpdateView): #Updateview es un class-based view usado para actualizar datos
+class PedidoEditView( UpdateView): #Updateview es un class-based view usado para actualizar datos #solostaffmixin se sacó
     model = Pedido #se elige el modelo
     form_class = PedidoForm #se elige el formulario
     template_name = "compraventa/edit_pedido.html" #se elige el template
 
     def get_success_url(self): #override del metodo que la clase usa al completar exitosamente la edición. En este paso redirige al list-view
-        return reverse('pedido_list')
+        return reverse('gestion-pedidos')
 
     def get_object(self, queryset=None): #override del método de la clase padre.
-        pedido = super().get_object(queryset) #obtiene el objeto tarea y lo asigna a esta variable
+        pedido = super().get_object(queryset) #obtiene el objeto pedido y lo asigna a esta variable
        
         pedido.save() #se guarda
         return pedido
+    
+class ClientePedidoEditView(DetailView):
+    model = Pedido
+    template_name = "compraventa/detalle_pedido.html"
+    pk_url_kwarg = 'pk'  # Specify the keyword argument for the primary key
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add any additional context data if needed
+        return context
+
+from django.views import View
+class CancelarPedidoView(View):
+    def post(self, request, pk):
+        pedido = Pedido.objects.get(pk=pk)
+        pedido.estado_despacho = request.POST.get('estado_despacho')
+        pedido.save()
+        return HttpResponseRedirect(reverse('detalle_pedido', args=[pk]))
+    
+
+class TomarPedidoPaso4View(ListView):
+    template_name = 'compraventa/tomar_pedido_paso4.html'
+    context_object_name = 'pedidos'
+   
+    
+    def get_queryset(self):
+
+        self.id_pedido = self.request.GET.get('id_pedido')
+        print("id_pedido---------:", self.id_pedido)
+        queryset = ItemPedido.objects.filter(pedido_id = self.id_pedido)
+        """
+        try:
+            pedido = Pedido.objects.get(id_pedido=id_pedido)
+            itempedidos = ItemPedido.objects.filter(pedido_id =)
+        except Pedido.DoesNotExist:
+            # Handle the case when the pedido doesn't exist
+            pedido = None
+            productos = []
+        """
+            
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print("self get", self.get)
+        id_pedido = self.id_pedido
+        try:
+            pedido = Pedido.objects.get(id_pedido=id_pedido)
+        except Pedido.DoesNotExist:
+            pedido = None
+        context['productos'] = ItemPedido.objects.filter(pedido_id=id_pedido)
+        context['pedido'] = pedido
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        if 'id_pedido_ok' in request.POST:
+            id_pedido = request.POST['id_pedido_ok'] #obtiene el id del pedido ya terminado
+            return render(request, 'compraventa/tomar_pedido_paso4.html', {'id_pedido' : id_pedido})
+
+
+
 """
 
 Request Method:	POST

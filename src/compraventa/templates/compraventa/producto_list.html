@@ -2,10 +2,11 @@
 
 {% block body %}
 <div class= "mt-1 ml-1">
-    <h1>Productos</h1>
+    <h1>Pedido {{id_pedido}}</h1>
     <table class="table table-striped-columns">
         <thead>
           <tr>
+            <th>Foto</th>
             <th>Producto</th>
             <th>Modelo</th>
             <th>Descripción</th>
@@ -16,6 +17,7 @@
         <tbody>
           {% for producto in object_list %}
           <tr>
+            <td><img src="{{ producto.foto.url }}" ></td>
             <td>{{ producto.nombre }}</td>
             <td>{{ producto.modelo }}</td>
             <td>{{ producto.descripcion }}</td>
@@ -27,13 +29,33 @@
                 <button type="submit">Agregar</button>
             </form>
             
+            
                 </td>
           </tr>
           {% endfor %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id_pedido" value="{{ id_pedido }}">
+            <label>Cliente: {{cliente_id}}</label>"
+            <button type="submit">Ir al carrito</button>
+        </form>
         </tbody>
       </table>
+
+      <p>id cliente{{ id_cliente_pedido}}<p>
+        {%for object in object_list%}
+
+        <p>{{object}}</p>
+        {%endfor%}
       
-    
+      <form action="{% url 'tomar_pedido_paso4' %}"method="post">
+        {% csrf_token %}
+        
+        <input type="hidden" name="id_pedido" value={{ id_pedido}}>
+        
+        <button type="submit">Ir al Carrito</button>
+    </form>
+      
  
 
 
